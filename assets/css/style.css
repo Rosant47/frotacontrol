@@ -1254,7 +1254,7 @@ input[name="_csrf"] { display: none !important; }
 /* ══════════════════════════════════════════
    DARK MODE TOGGLE BUTTON
 ══════════════════════════════════════════ */
-#darkToggle {
+#darkToggle, #sugestaoBtn {
     background: none;
     border: none;
     cursor: pointer;
@@ -1268,12 +1268,12 @@ input[name="_csrf"] { display: none !important; }
     justify-content: center;
     flex-shrink: 0;
 }
-#darkToggle:hover { background: var(--bg); color: var(--text); }
+#darkToggle:hover, #sugestaoBtn:hover { background: var(--bg); color: var(--text); }
 
 /* No mobile o header tem fundo gradiente escuro — ícone precisa ser branco */
 @media (max-width: 768px) {
-    #darkToggle       { color: rgba(255,255,255,.85); }
-    #darkToggle:hover { background: rgba(255,255,255,.12); color: #fff; }
+    #darkToggle, #sugestaoBtn       { color: rgba(255,255,255,.85); }
+    #darkToggle:hover, #sugestaoBtn:hover { background: rgba(255,255,255,.12); color: #fff; }
 }
 
 /* ══════════════════════════════════════════
@@ -1312,7 +1312,7 @@ html.dark .btn-secondary        { background: #334155; border-color: #475569; co
 html.dark .btn-secondary:hover  { background: #3d4f63; color: var(--text); }
 html.dark .btn-outline-primary:hover { background: rgba(37,99,235,.15); }
 html.dark .menu-toggle:hover    { background: var(--border); }
-html.dark #darkToggle:hover     { background: var(--border); }
+html.dark #darkToggle:hover, html.dark #sugestaoBtn:hover { background: var(--border); }
 
 /* Alerts */
 html.dark .alert-success { background: #052e16; color: #86efac; border-color: #166534; }

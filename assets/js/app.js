@@ -6819,5 +6819,56 @@ async function renderAjuda() {
     buildHtml();
 }
 
+// ── Modal de sugestão ─────────────────────────────────────────
+function showSugestaoModal() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    overlay.innerHTML = `
+        <div style="background:var(--card,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+            <h2 style="font-size:17px;font-weight:700;color:var(--text,#1e293b);margin:0 0 6px">
+                <i class="fa-solid fa-lightbulb" style="color:var(--accent,#2563eb)"></i> Enviar sugestão
+            </h2>
+            <p style="font-size:13px;color:var(--muted,#64748b);margin:0 0 18px">Tem alguma ideia ou melhoria? Conta pra gente!</p>
+            <textarea id="sugestaoTxt" rows="5" placeholder="Descreva sua sugestão..."
+                style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;font-size:14px;resize:vertical;box-sizing:border-box;background:var(--bg,#f8fafc);color:var(--text,#1e293b);font-family:inherit"></textarea>
+            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+                <button id="sugestaoCancel" style="padding:10px 18px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text,#1e293b)">Cancelar</button>
+                <button id="sugestaoSend" style="padding:10px 20px;background:linear-gradient(135deg,var(--accent,#2563eb),var(--accent-dk,#1d4ed8));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('sugestaoCancel').addEventListener('click', () => overlay.remove());
+    document.getElementById('sugestaoSend').addEventListener('click', () => {
+        const txt = document.getElementById('sugestaoTxt').value.trim();
+        if (!txt) { showToast('Escreva sua sugestão antes de enviar.', 'warning'); return; }
+
+        const empresa  = state.empresa?.nome  || 'desconhecida';
+        const userEmail = state.user?.email    || '';
+        const userName  = document.getElementById('headerUserName')?.textContent || '';
+        const mensagem  = `💡 *${brandConfig.name} — Nova sugestão!*\n\nEmpresa: *${empresa}*\nUsuário: ${userName}\nEmail: ${userEmail}\n\n${txt}`;
+
+        if (brandConfig.ntfyTopic) {
+            fetch(`https://ntfy.sh/${brandConfig.ntfyTopic}`, {
+                method: 'POST',
+                headers: { 'Title': `💡 Sugestão — ${empresa}`, 'Priority': 'default', 'Tags': 'bulb' },
+                body: `Empresa: ${empresa}\nUsuário: ${userName} (${userEmail})\n\n${txt}`,
+            }).catch(() => {});
+        }
+        if (brandConfig.callmebotApiKey && brandConfig.supportWhatsApp) {
+            const phone = brandConfig.supportWhatsApp.replace(/\D/g, '');
+            fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(mensagem)}&apikey=${brandConfig.callmebotApiKey}`, { mode: 'no-cors' }).catch(() => {});
+        }
+
+        overlay.remove();
+        showToast('Sugestão enviada! Obrigado pelo feedback.');
+    });
+}
+
+document.getElementById('sugestaoBtn').addEventListener('click', showSugestaoModal);
+
 // Expose navigate globally for inline button handlers
 window.navigate = navigate;
