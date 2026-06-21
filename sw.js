@@ -1,4 +1,4 @@
-const CACHE = 'frotacontrol-v116';
+const CACHE = 'frotacontrol-v117';
 const STATIC = [
   '/',
   '/index.html',
