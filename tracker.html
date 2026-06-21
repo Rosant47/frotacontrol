@@ -48,7 +48,7 @@
 <script type="module">
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from './assets/js/config.js';
 
 const p     = new URLSearchParams(location.search);
@@ -152,6 +152,10 @@ async function init() {
         elErr.style.display = 'block';
         elErr.textContent   = e.message;
         return;
+    }
+    // Registra que o motorista abriu o link (confirmação de recebimento)
+    if (uso) {
+        try { await updateDoc(doc(db, 'utilizacoes', uso), { trackerAbertoEm: serverTimestamp() }); } catch(_) {}
     }
     if (!navigator.geolocation) {
         setStatus('error', 'GPS não disponível neste dispositivo');

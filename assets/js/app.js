@@ -547,6 +547,7 @@ function showTrocaSenhaModal() {
 }
 
 function navigate(page, sub = null) {
+    if (usageRefreshTimer && page !== 'usage') { clearInterval(usageRefreshTimer); usageRefreshTimer = null; }
     if (state.currentPage === 'map' && page !== 'map') {
         if (mapUnsub) { mapUnsub(); mapUnsub = null; }
         const pc = document.getElementById('pageContent');
@@ -776,6 +777,7 @@ function fmtDate(val) {
 
 function fmtMoney(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}); }
 function fmtKm(v)    { return Number(v || 0).toLocaleString('pt-BR') + ' km'; }
+function fmtHoraTs(ts) { if (!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 function waLink(tel) { let t=(tel||'').replace(/\D/g,''); if(t&&!t.startsWith('55'))t='55'+t; return t; }
 function motoristUrl(u, v, m) {
     if (!u?.id || !u?.linkToken) return '';
@@ -3054,10 +3056,11 @@ async function renderUsage(sub) {
           <span style="font-size:12px;color:var(--muted)">Saiu ${u.horaSaida?.substring(0,5)||'—'}</span>
         </div>
         <div style="font-size:12px;color:var(--muted)">KM: <span style="font-weight:600;color:var(--text)">${fmtKm(u.kmInicial)}</span></div>
+        ${u.trackerAbertoEm ? `<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600"><i class="fa-solid fa-circle-check" style="font-size:10px"></i> GPS ativo ${fmtHoraTs(u.trackerAbertoEm)}</div>` : u.waMsgEnviadaEm ? `<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#d97706;font-weight:600"><i class="fa-solid fa-clock" style="font-size:10px"></i> Aguardando motorista...</div>` : ''}
       </div>
       ${canEdit() ? `<div class="card-list-actions">
         <button class="btn btn-primary btn-sm" data-gps="${u.id}" title="Abrir mapa ao vivo"><i class="fa-solid fa-map-location-dot"></i></button>
-        ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar rastreio para ${esc(m?.nome||'')}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:9px;margin-left:1px"></i></a>` : ''}
+        ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar rastreio para ${esc(m?.nome||'')}" data-wa-tracker="${u.id}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:9px;margin-left:1px"></i></a>` : ''}
         <button class="btn btn-warning btn-sm" data-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" title="Atualizar KM"><i class="fa-solid fa-gauge-high"></i></button>
         ${m?.telefone ? `<button data-wa-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" data-wa-url="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(`Olá ${m?.nome||''}! Pode nos informar o KM atual do veículo ${v?.placa||''}?\n👉 ${motoristUrl(u,v,m)}`)}" class="btn btn-whatsapp btn-sm" title="Solicitar KM via WhatsApp"><i class="fa-solid fa-gauge-high"></i><i class="fa-brands fa-whatsapp" style="font-size:9px;margin-left:1px"></i></button>` : ''}
         <button class="btn btn-secondary btn-sm" data-swap="${u.id}" title="Trocar motorista no turno"><i class="fa-solid fa-arrows-rotate"></i></button>
@@ -3094,10 +3097,11 @@ async function renderUsage(sub) {
         </div>
         ${u.observacoes?`<div style="font-size:11px;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:8px;margin-top:2px">${esc(u.observacoes)}</div>`:''}
         ${trocasTimeline(u, driverMap)}
+        ${u.trackerAbertoEm ? `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#16a34a;font-weight:600;border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><i class="fa-solid fa-circle-check"></i> Motorista abriu o link às ${fmtHoraTs(u.trackerAbertoEm)}</div>` : u.waMsgEnviadaEm ? `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#d97706;font-weight:600;border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><i class="fa-solid fa-clock"></i> Mensagem enviada às ${fmtHoraTs(u.waMsgEnviadaEm)} — aguardando motorista</div>` : ''}
       </div>
       ${canEdit() ? `<div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" data-gps="${u.id}" title="Abrir mapa ao vivo"><i class="fa-solid fa-map-location-dot"></i> Rastrear</button>
-        ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar link de rastreio para ${esc(m?.nome||'')}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:10px;margin-left:2px"></i> Enviar Rastreio</a>` : ''}
+        ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar link de rastreio para ${esc(m?.nome||'')}" data-wa-tracker="${u.id}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:10px;margin-left:2px"></i> Enviar Rastreio</a>` : ''}
         <button class="btn btn-warning btn-sm" data-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" title="Atualizar KM"><i class="fa-solid fa-gauge-high"></i> KM</button>
         ${m?.telefone ? `<button data-wa-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" data-wa-url="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(`Olá ${m?.nome||''}! Pode nos informar o KM atual do veículo ${v?.placa||''}?\n👉 ${motoristUrl(u,v,m)}`)}" class="btn btn-whatsapp btn-sm" title="Solicitar KM via WhatsApp"><i class="fa-solid fa-gauge-high"></i><i class="fa-brands fa-whatsapp" style="font-size:10px;margin-left:2px"></i> Solicitar KM</button>` : ''}
         <button class="btn btn-secondary btn-sm" data-swap="${u.id}" title="Trocar motorista no turno"><i class="fa-solid fa-arrows-rotate"></i> Trocar Motorista</button>
@@ -3291,6 +3295,22 @@ async function renderUsage(sub) {
             } catch(err) { showFlash('Erro: ' + err.message, 'danger'); }
         });
     }));
+
+    // Rastreia quando o gestor clica em "Enviar Rastreio" via WhatsApp
+    document.querySelectorAll('[data-wa-tracker]').forEach(el => {
+        el.addEventListener('click', () => {
+            saveDoc('utilizacoes', { waMsgEnviadaEm: serverTimestamp() }, el.dataset.waTracker).catch(() => {});
+        });
+    });
+
+    // Auto-refresh a cada 30s enquanto houver utilizações em_uso e o módulo estiver ativo
+    if (usageRefreshTimer) clearInterval(usageRefreshTimer);
+    if (usages.some(u => u.status === 'em_uso')) {
+        usageRefreshTimer = setInterval(() => {
+            if (state.currentPage === 'usage' && !state.sub) renderUsage();
+            else { clearInterval(usageRefreshTimer); usageRefreshTimer = null; }
+        }, 30000);
+    }
 }
 
 async function renderUsageForm() {
@@ -4349,7 +4369,8 @@ function _showCanceladoModal() {
 // ══════════════════════════════════════════════════════════════
 // GPS / RASTREAMENTO
 // ══════════════════════════════════════════════════════════════
-let mapUnsub    = null;
+let mapUnsub         = null;
+let usageRefreshTimer = null;
 let gpsWatchId  = null;
 let gpsUsageId  = null;
 // ══════════════════════════════════════════════════════════════
