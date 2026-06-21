@@ -159,5 +159,13 @@ service cloud.firestore {
           || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
       allow update, delete: if false;
     }
+
+    // Sugestões — qualquer autenticado cria; só superadmin lê e atualiza (marcar como lida)
+    match /sugestoes/{id} {
+      allow create: if isAuthenticated();
+      allow read, update: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+      allow delete: if false;
+    }
   }
 }

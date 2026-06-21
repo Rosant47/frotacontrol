@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Sugestões</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh}
+        header{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:12px}
+        header h1{font-size:18px;font-weight:700}
+        header p{font-size:12px;opacity:.7;margin-top:2px}
+        .container{max-width:900px;margin:0 auto;padding:24px 16px}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+        .stat{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+        .stat-val{font-size:26px;font-weight:800;color:#1e293b}
+        .stat-lbl{font-size:12px;color:#64748b;margin-top:2px}
+        .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:20px}
+        .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+        .filters input,.filters select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;color:#1e293b;font-family:inherit;background:#fff}
+        .filters input{flex:1;min-width:180px}
+        .filters input:focus,.filters select:focus{outline:none;border-color:#2563eb}
+        .sug-list{display:flex;flex-direction:column;gap:12px}
+        .sug-item{border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;transition:border-color .15s}
+        .sug-item.nao-lida{border-color:#bfdbfe;background:#f0f7ff}
+        .sug-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+        .sug-empresa{font-weight:700;font-size:13px;color:#1e293b}
+        .sug-user{font-size:12px;color:#64748b}
+        .sug-ts{font-size:11px;color:#94a3b8;margin-left:auto;white-space:nowrap}
+        .sug-txt{font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+        .badge-nova{background:#dbeafe;color:#1d4ed8;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+        .badge-lida{background:#f1f5f9;color:#94a3b8;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+        .btn-lida{margin-top:12px;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;transition:all .15s}
+        .btn-lida:hover{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
+        .empty{text-align:center;padding:50px;color:#94a3b8;font-size:14px}
+        #loadMsg{text-align:center;padding:60px;color:#64748b;font-size:14px}
+        #authWall{display:none;text-align:center;padding:80px 20px}
+        #authWall h2{font-size:20px;color:#dc2626;margin-bottom:8px}
+        #authWall p{font-size:14px;color:#64748b}
+        @media(max-width:600px){header{padding:14px 16px;flex-wrap:wrap;gap:8px}}
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1><i class="fa-solid fa-lightbulb"></i> Sugestões dos Clientes</h1>
+        <p>Ideias e melhorias enviadas pelos usuários</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+        <a href="admin-planos.html" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none">
+            <i class="fa-solid fa-crown"></i> Planos
+        </a>
+        <a href="admin-logs.html" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none">
+            <i class="fa-solid fa-clock-rotate-left"></i> Logs
+        </a>
+        <button id="logoutBtn" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
+    </div>
+</header>
+
+<div class="container">
+    <div id="loadMsg"><i class="fa-solid fa-spinner fa-spin"></i> Carregando...</div>
+    <div id="authWall">
+        <h2><i class="fa-solid fa-lock"></i> Acesso Restrito</h2>
+        <p>Apenas o superadmin pode acessar esta página.</p>
+    </div>
+
+    <div id="mainContent" style="display:none">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-val" id="statTotal">–</div>
+                <div class="stat-lbl">Total de sugestões</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statNovas" style="color:#1d4ed8">–</div>
+                <div class="stat-lbl">Não lidas</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statEmpresas" style="color:#16a34a">–</div>
+                <div class="stat-lbl">Empresas distintas</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+                <h2 style="font-size:15px;font-weight:700;color:#1e293b"><i class="fa-solid fa-lightbulb" style="color:#2563eb;margin-right:6px"></i>Sugestões recebidas</h2>
+            </div>
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Buscar por empresa ou texto..." oninput="renderList()">
+                <select id="lidaFilter" onchange="renderList()">
+                    <option value="">Todas</option>
+                    <option value="nao">Não lidas</option>
+                    <option value="sim">Lidas</option>
+                </select>
+                <button onclick="clearFilters()" style="padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;white-space:nowrap">
+                    <i class="fa-solid fa-xmark"></i> Limpar
+                </button>
+            </div>
+            <div class="sug-list" id="sugList"></div>
+            <div id="emptyMsg" class="empty" style="display:none"><i class="fa-solid fa-lightbulb" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3"></i>Nenhuma sugestão encontrada</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, updateDoc, query, orderBy, getDoc }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const SUPERADMIN_EMAIL = brandConfig.superadminEmail || 'rbeto45@gmail.com';
+
+let allSugestoes = [];
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => window.location.href = 'login.html');
+});
+
+onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const profSnap = await getDoc(doc(db, 'usuarios', user.uid)).catch(() => null);
+    const isSuperAdmin = user.email === SUPERADMIN_EMAIL
+        || profSnap?.data()?.perfil === 'superadmin';
+
+    document.getElementById('loadMsg').style.display = 'none';
+
+    if (!isSuperAdmin) {
+        document.getElementById('authWall').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('mainContent').style.display = 'block';
+    await fetchSugestoes();
+    renderStats();
+    renderList();
+});
+
+async function fetchSugestoes() {
+    const q = query(collection(db, 'sugestoes'), orderBy('ts', 'desc'));
+    const snap = await getDocs(q).catch(() => null);
+    if (!snap) return;
+    allSugestoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+function renderStats() {
+    document.getElementById('statTotal').textContent    = allSugestoes.length;
+    document.getElementById('statNovas').textContent    = allSugestoes.filter(s => !s.lida).length;
+    const empresas = new Set(allSugestoes.map(s => s.empresaId).filter(Boolean));
+    document.getElementById('statEmpresas').textContent = empresas.size;
+}
+
+window.renderList = function() {
+    const busca = document.getElementById('searchInput').value.toLowerCase();
+    const lida  = document.getElementById('lidaFilter').value;
+
+    let lista = allSugestoes.filter(s => {
+        if (lida === 'nao' && s.lida)  return false;
+        if (lida === 'sim' && !s.lida) return false;
+        if (busca && !`${s.empresa} ${s.texto} ${s.userEmail} ${s.userName}`.toLowerCase().includes(busca)) return false;
+        return true;
+    });
+
+    const container = document.getElementById('sugList');
+    const emptyMsg  = document.getElementById('emptyMsg');
+
+    if (!lista.length) {
+        container.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        return;
+    }
+    emptyMsg.style.display = 'none';
+
+    container.innerHTML = lista.map(s => {
+        const ts = s.ts?.toDate ? s.ts.toDate() : null;
+        const tsStr = ts ? ts.toLocaleString('pt-BR') : '–';
+        return `
+        <div class="sug-item ${s.lida ? '' : 'nao-lida'}" id="sug-${s.id}">
+            <div class="sug-meta">
+                <span class="sug-empresa"><i class="fa-solid fa-building" style="color:#2563eb;margin-right:4px"></i>${esc(s.empresa || '–')}</span>
+                <span class="sug-user"><i class="fa-solid fa-user" style="margin-right:3px"></i>${esc(s.userName || '')} ${s.userEmail ? '· ' + esc(s.userEmail) : ''}</span>
+                ${s.lida ? '<span class="badge-lida">Lida</span>' : '<span class="badge-nova">Nova</span>'}
+                <span class="sug-ts">${tsStr}</span>
+            </div>
+            <div class="sug-txt">${esc(s.texto)}</div>
+            ${!s.lida ? `<button class="btn-lida" onclick="marcarLida('${s.id}')"><i class="fa-solid fa-check"></i> Marcar como lida</button>` : ''}
+        </div>`;
+    }).join('');
+};
+
+window.marcarLida = async function(id) {
+    await updateDoc(doc(db, 'sugestoes', id), { lida: true }).catch(() => {});
+    const item = allSugestoes.find(s => s.id === id);
+    if (item) item.lida = true;
+    renderStats();
+    renderList();
+};
+
+window.clearFilters = function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('lidaFilter').value  = '';
+    renderList();
+};
+
+function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

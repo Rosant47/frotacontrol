@@ -6825,21 +6825,30 @@ function showSugestaoModal() {
         const txt = document.getElementById('sugestaoTxt').value.trim();
         if (!txt) { showToast('Escreva sua sugestão antes de enviar.', 'warning'); return; }
 
-        const empresa  = state.empresa?.nome  || 'desconhecida';
-        const userEmail = state.user?.email    || '';
+        const empresa   = state.empresa?.nome || 'desconhecida';
+        const empresaId = state.empresa?.id   || '';
+        const userEmail = state.user?.email   || '';
         const userName  = document.getElementById('headerUserName')?.textContent || '';
-        const mensagem  = `💡 *${brandConfig.name} — Nova sugestão!*\n\nEmpresa: *${empresa}*\nUsuário: ${userName}\nEmail: ${userEmail}\n\n${txt}`;
 
-        if (brandConfig.ntfyTopic) {
-            fetch(`https://ntfy.sh/${brandConfig.ntfyTopic}`, {
-                method: 'POST',
-                headers: { 'Title': `💡 Sugestão — ${empresa}`, 'Priority': 'default', 'Tags': 'bulb' },
-                body: `Empresa: ${empresa}\nUsuário: ${userName} (${userEmail})\n\n${txt}`,
-            }).catch(() => {});
-        }
-        if (brandConfig.callmebotApiKey && brandConfig.supportWhatsApp) {
-            const phone = brandConfig.supportWhatsApp.replace(/\D/g, '');
-            fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(mensagem)}&apikey=${brandConfig.callmebotApiKey}`, { mode: 'no-cors' }).catch(() => {});
+        const btn = document.getElementById('sugestaoSend');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+        try {
+            await addDoc(collection(db, 'sugestoes'), {
+                texto:      txt,
+                empresa:    empresa,
+                empresaId:  empresaId,
+                userName:   userName,
+                userEmail:  userEmail,
+                lida:       false,
+                ts:         serverTimestamp(),
+            });
+        } catch(e) {
+            showToast('Erro ao enviar sugestão. Tente novamente.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar';
+            return;
         }
 
         overlay.remove();
