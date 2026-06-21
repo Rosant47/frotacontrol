@@ -19,7 +19,7 @@ firebase deploy --only hosting,firestore:rules  # hosting + regras
 ```
 
 > Sempre incrementar a versão do service worker em `sw.js` a cada deploy de hosting.  
-> Versão atual: `frotacontrol-v116`
+> Versão atual: `frotacontrol-v117`
 
 > **ATENÇÃO — memória:** a máquina tem 4 GB de RAM. Fechar o VSCode antes de rodar `firebase deploy`, senão dá "Falha ao inicializar o thread". Rodar o deploy direto no terminal do Windows.
 
