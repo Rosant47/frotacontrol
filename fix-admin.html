@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrigir Perfil Admin</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e3a5f,#2563eb);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .card{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+        h1{font-size:20px;color:#1e293b;margin-bottom:6px}
+        p{font-size:13px;color:#64748b;margin-bottom:24px}
+        .form-group{margin-bottom:16px}
+        label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:6px}
+        input{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#1e293b}
+        input:focus{outline:none;border-color:#2563eb}
+        .btn{width:100%;padding:13px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+        .alert{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px}
+        .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+        .alert-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+        a{display:block;margin-top:16px;text-align:center;color:#2563eb;font-size:13px}
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🔧 Corrigir Perfil de Admin</h1>
+    <p>Use esta página para definir qualquer usuário como Administrador pelo e-mail cadastrado.</p>
+
+    <div id="alertArea"></div>
+
+    <div class="form-group">
+        <label>E-mail do usuário</label>
+        <input type="email" id="email" placeholder="roberto@gmail.com">
+    </div>
+    <div class="form-group">
+        <label>Senha do usuário (para autenticar)</label>
+        <input type="password" id="senha" placeholder="••••••••">
+    </div>
+    <button class="btn" id="fixBtn">Tornar Administrador</button>
+    <a href="login.html">← Voltar ao login</a>
+</div>
+
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, query, where, getDocs, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig } from './assets/js/config.js';
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+document.getElementById('fixBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    const btn   = document.getElementById('fixBtn');
+
+    if (!email || !senha) { showAlert('Preencha e-mail e senha.', 'danger'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Aguarde...';
+
+    try {
+        // Faz login para confirmar identidade
+        const cred = await signInWithEmailAndPassword(auth, email, senha);
+        const uid  = cred.user.uid;
+
+        // Busca o documento no Firestore pelo e-mail
+        const q    = query(collection(db, 'usuarios'), where('email', '==', email));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            showAlert('Usuário autenticado mas perfil não encontrado no Firestore. Acesse setup.html.', 'danger');
+        } else {
+            await updateDoc(snap.docs[0].ref, { perfil: 'admin', ativo: true });
+            showAlert('✅ Perfil alterado para Administrador com sucesso! Faça login normalmente.', 'success');
+            document.getElementById('fixBtn').style.display = 'none';
+        }
+    } catch(err) {
+        const msgs = {
+            'auth/invalid-credential': 'E-mail ou senha incorretos.',
+            'auth/wrong-password':     'Senha incorreta.',
+            'auth/user-not-found':     'Usuário não encontrado.',
+        };
+        showAlert(msgs[err.code] || 'Erro: ' + err.message, 'danger');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Tornar Administrador';
+});
+
+function showAlert(msg, type) {
+    document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-${type}">${msg}</div>`;
+}
+</script>
+</body>
+</html>

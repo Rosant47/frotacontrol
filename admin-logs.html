@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Logs de Atividade</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh}
+        header{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:12px}
+        header h1{font-size:18px;font-weight:700}
+        header p{font-size:12px;opacity:.7;margin-top:2px}
+        .container{max-width:1200px;margin:0 auto;padding:24px 16px}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:24px}
+        .stat{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+        .stat-val{font-size:26px;font-weight:800;color:#1e293b}
+        .stat-lbl{font-size:12px;color:#64748b;margin-top:2px}
+        .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:20px}
+        .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+        .filters input,.filters select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;color:#1e293b;font-family:inherit;background:#fff}
+        .filters input{flex:1;min-width:180px}
+        .filters input:focus,.filters select:focus{outline:none;border-color:#2563eb}
+        .filter-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+        .fbtn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s}
+        .fbtn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{text-align:left;padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #f1f5f9;white-space:nowrap}
+        td{padding:10px 12px;border-bottom:1px solid #f8fafc;color:#374151;vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:#fafafa}
+        .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+        .ac-criou{background:#dcfce7;color:#16a34a}
+        .ac-editou{background:#dbeafe;color:#1d4ed8}
+        .ac-excluiu{background:#fee2e2;color:#dc2626}
+        .ac-acessou{background:#f1f5f9;color:#64748b}
+        .mod-badge{background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+        .empty{text-align:center;padding:50px;color:#94a3b8;font-size:14px}
+        #loadMsg{text-align:center;padding:60px;color:#64748b;font-size:14px}
+        #authWall{display:none;text-align:center;padding:80px 20px}
+        #authWall h2{font-size:20px;color:#dc2626;margin-bottom:8px}
+        #authWall p{font-size:14px;color:#64748b}
+        .load-more{display:block;width:100%;padding:12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;margin-top:12px;transition:all .15s}
+        .load-more:hover{background:#f1f5f9;color:#374151}
+        .ts-cell{white-space:nowrap;font-size:12px;color:#64748b}
+        .user-cell{display:flex;flex-direction:column;gap:1px}
+        .user-cell span{font-size:11px;color:#94a3b8}
+        @media(max-width:700px){
+            .filters{flex-direction:column}
+            .filters input,.filters select{width:100%}
+            th:nth-child(3),td:nth-child(3),th:nth-child(6),td:nth-child(6){display:none}
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1><i class="fa-solid fa-clock-rotate-left"></i> Logs de Atividade</h1>
+        <p>O que seus usuários fizeram no sistema</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+        <a href="admin-planos.html" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none">
+            <i class="fa-solid fa-arrow-left"></i> Planos
+        </a>
+        <button id="logoutBtn" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
+    </div>
+</header>
+
+<div class="container">
+    <div id="loadMsg"><i class="fa-solid fa-spinner fa-spin"></i> Carregando...</div>
+    <div id="authWall">
+        <h2><i class="fa-solid fa-lock"></i> Acesso Restrito</h2>
+        <p>Apenas o superadmin pode acessar esta página.</p>
+    </div>
+
+    <div id="mainContent" style="display:none">
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-val" id="statTotal">–</div>
+                <div class="stat-lbl">Total de ações hoje</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statCriou" style="color:#16a34a">–</div>
+                <div class="stat-lbl">Criações hoje</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statEditou" style="color:#1d4ed8">–</div>
+                <div class="stat-lbl">Edições hoje</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statExcluiu" style="color:#dc2626">–</div>
+                <div class="stat-lbl">Exclusões hoje</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="statLogins" style="color:#7c3aed">–</div>
+                <div class="stat-lbl">Logins hoje</div>
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+                <h2 style="font-size:15px;font-weight:700;color:#1e293b"><i class="fa-solid fa-list-check" style="color:#2563eb;margin-right:6px"></i>Histórico de Ações</h2>
+                <button onclick="exportCSV()" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </button>
+            </div>
+
+            <!-- Filtros de ação -->
+            <div class="filter-btns">
+                <button class="fbtn active" data-acao="">Todas</button>
+                <button class="fbtn" data-acao="criou">Criações</button>
+                <button class="fbtn" data-acao="editou">Edições</button>
+                <button class="fbtn" data-acao="excluiu">Exclusões</button>
+                <button class="fbtn" data-acao="acessou">Logins</button>
+            </div>
+
+            <!-- Filtros de texto / módulo / data -->
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Buscar por empresa, usuário ou e-mail..." oninput="renderTable()">
+                <select id="modFilter" onchange="renderTable()">
+                    <option value="">Todos os módulos</option>
+                    <option value="sistema">Sistema (login)</option>
+                    <option value="veiculos">Veículos</option>
+                    <option value="motoristas">Motoristas</option>
+                    <option value="utilizacoes">Utilizações</option>
+                    <option value="multas">Multas</option>
+                    <option value="abastecimentos">Abastecimentos</option>
+                    <option value="manutencoes">Manutenções</option>
+                    <option value="escalas">Escalas</option>
+                    <option value="dispositivos">Dispositivos</option>
+                </select>
+                <input type="date" id="dateFrom" onchange="renderTable()" title="De">
+                <input type="date" id="dateTo"   onchange="renderTable()" title="Até">
+                <button onclick="clearFilters()" style="padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;white-space:nowrap">
+                    <i class="fa-solid fa-xmark"></i> Limpar
+                </button>
+            </div>
+
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data / Hora</th>
+                            <th>Empresa</th>
+                            <th>Usuário</th>
+                            <th>Módulo</th>
+                            <th>Ação</th>
+                            <th style="color:#94a3b8">ID do item</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+                <div id="emptyMsg" class="empty" style="display:none"><i class="fa-solid fa-magnifying-glass" style="font-size:24px;margin-bottom:8px;display:block"></i>Nenhum registro encontrado</div>
+            </div>
+            <button class="load-more" id="loadMoreBtn" onclick="loadMore()" style="display:none">
+                <i class="fa-solid fa-chevron-down"></i> Carregar mais
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc, query, orderBy, limit, startAfter, where, Timestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const SUPERADMIN_EMAIL = brandConfig.superadminEmail || 'rbeto45@gmail.com';
+const PAGE_SIZE = 100;
+
+const MOD_LABELS = {
+    sistema:'Sistema',veiculos:'Veículos',motoristas:'Motoristas',
+    utilizacoes:'Utilizações',multas:'Multas',abastecimentos:'Abastecimentos',
+    manutencoes:'Manutenções',escalas:'Escalas',dispositivos:'Dispositivos',
+};
+const ACAO_LABELS = { criou:'Criou', editou:'Editou', excluiu:'Excluiu', acessou:'Login' };
+
+let allLogs    = [];
+let lastDoc    = null;
+let hasMore    = false;
+let acaoFilter = '';
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => window.location.href = 'login.html');
+});
+
+onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const profSnap = await getDoc(doc(db, 'usuarios', user.uid)).catch(() => null);
+    const isSuperAdmin = user.email === SUPERADMIN_EMAIL
+        || profSnap?.data()?.perfil === 'superadmin';
+
+    document.getElementById('loadMsg').style.display = 'none';
+
+    if (!isSuperAdmin) {
+        document.getElementById('authWall').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('mainContent').style.display = 'block';
+    await fetchLogs();
+    renderStats();
+    renderTable();
+});
+
+async function fetchLogs(after = null) {
+    let q = query(collection(db, 'logs'), orderBy('ts', 'desc'), limit(PAGE_SIZE + 1));
+    if (after) q = query(collection(db, 'logs'), orderBy('ts', 'desc'), startAfter(after), limit(PAGE_SIZE + 1));
+
+    const snap = await getDocs(q).catch(() => null);
+    if (!snap) return;
+
+    const docs = snap.docs;
+    hasMore = docs.length > PAGE_SIZE;
+    const batch = docs.slice(0, PAGE_SIZE);
+    lastDoc = batch[batch.length - 1] || null;
+
+    const rows = batch.map(d => ({ id: d.id, ...d.data() }));
+    if (after) allLogs = [...allLogs, ...rows];
+    else       allLogs = rows;
+
+    document.getElementById('loadMoreBtn').style.display = hasMore ? 'block' : 'none';
+}
+
+window.loadMore = async () => {
+    const btn = document.getElementById('loadMoreBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...';
+    await fetchLogs(lastDoc);
+    renderTable();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Carregar mais';
+};
+
+function renderStats() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const todayLogs = allLogs.filter(l => {
+        const ts = l.ts?.toDate ? l.ts.toDate() : new Date(l.ts?.seconds * 1000 || 0);
+        return ts >= today;
+    });
+    document.getElementById('statTotal').textContent   = todayLogs.length;
+    document.getElementById('statCriou').textContent   = todayLogs.filter(l => l.acao === 'criou').length;
+    document.getElementById('statEditou').textContent  = todayLogs.filter(l => l.acao === 'editou').length;
+    document.getElementById('statExcluiu').textContent = todayLogs.filter(l => l.acao === 'excluiu').length;
+    document.getElementById('statLogins').textContent  = todayLogs.filter(l => l.acao === 'acessou').length;
+}
+
+window.renderTable = () => {
+    const search  = document.getElementById('searchInput').value.toLowerCase();
+    const mod     = document.getElementById('modFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo   = document.getElementById('dateTo').value;
+
+    let filtered = allLogs.filter(l => {
+        if (acaoFilter && l.acao !== acaoFilter) return false;
+        if (mod && l.modulo !== mod) return false;
+        if (search) {
+            const hay = `${l.empresaNome} ${l.userNome} ${l.userEmail}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+        }
+        if (dateFrom || dateTo) {
+            const ts = l.ts?.toDate ? l.ts.toDate() : new Date(l.ts?.seconds * 1000 || 0);
+            if (dateFrom && ts < new Date(dateFrom + 'T00:00:00')) return false;
+            if (dateTo   && ts > new Date(dateTo   + 'T23:59:59')) return false;
+        }
+        return true;
+    });
+
+    const tbody = document.getElementById('logTableBody');
+    document.getElementById('emptyMsg').style.display = filtered.length ? 'none' : 'block';
+
+    tbody.innerHTML = filtered.map(l => {
+        const ts   = l.ts?.toDate ? l.ts.toDate() : new Date(l.ts?.seconds * 1000 || 0);
+        const dtStr = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+        const acaoClass = `ac-${l.acao || 'acessou'}`;
+        const acaoLabel = ACAO_LABELS[l.acao] || l.acao;
+        const modLabel  = MOD_LABELS[l.modulo] || l.modulo;
+        const itemId    = l.itemId ? `<span style="font-size:11px;color:#94a3b8;font-family:monospace">${String(l.itemId).slice(0,12)}…</span>` : '–';
+        return `<tr>
+            <td class="ts-cell">${dtStr}</td>
+            <td><strong>${escHtml(l.empresaNome || '–')}</strong></td>
+            <td><div class="user-cell"><strong>${escHtml(l.userNome || '–')}</strong><span>${escHtml(l.userEmail || '')}</span></div></td>
+            <td><span class="mod-badge">${escHtml(modLabel)}</span></td>
+            <td><span class="badge ${acaoClass}">${escHtml(acaoLabel)}</span></td>
+            <td>${itemId}</td>
+        </tr>`;
+    }).join('');
+};
+
+window.clearFilters = () => {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('modFilter').value   = '';
+    document.getElementById('dateFrom').value    = '';
+    document.getElementById('dateTo').value      = '';
+    acaoFilter = '';
+    document.querySelectorAll('.fbtn').forEach(b => b.classList.toggle('active', b.dataset.acao === ''));
+    renderTable();
+};
+
+document.querySelectorAll('.fbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        acaoFilter = btn.dataset.acao;
+        document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTable();
+    });
+});
+
+window.exportCSV = () => {
+    const rows = [['Data/Hora','Empresa','Usuário','E-mail','Módulo','Ação','ID']];
+    allLogs.forEach(l => {
+        const ts = l.ts?.toDate ? l.ts.toDate() : new Date(l.ts?.seconds * 1000 || 0);
+        rows.push([
+            ts.toLocaleString('pt-BR'),
+            l.empresaNome || '',
+            l.userNome    || '',
+            l.userEmail   || '',
+            MOD_LABELS[l.modulo] || l.modulo || '',
+            ACAO_LABELS[l.acao]  || l.acao   || '',
+            l.itemId || '',
+        ]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a   = document.createElement('a');
+    a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+    a.download = `logs_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+};
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

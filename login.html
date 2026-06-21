@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — FrotaControl</title>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FrotaControl">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    <style>
+        body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:20px}
+        .wrap{width:100%;max-width:420px}
+        .card{background:#fff;border-radius:20px;padding:48px 40px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+        .logo{text-align:center;margin-bottom:36px}
+        .logo-icon{width:110px;height:110px;border-radius:22px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.15)}
+        h1{font-size:22px;font-weight:700;color:#1e293b}
+        .subtitle{font-size:13px;color:#64748b;margin-top:4px}
+        .alert{padding:12px 14px;border-radius:10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:20px}
+        .form-group{margin-bottom:20px}
+        label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:7px}
+        .input-wrap{position:relative}
+        .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:14px}
+        input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#1e293b;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+        input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .btn{width:100%;padding:14px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.35)}
+        .btn:disabled{opacity:.7;transform:none;cursor:not-allowed}
+        .footer{text-align:center;margin-top:28px;font-size:12px;color:rgba(255,255,255,.7)}
+        @media(max-width:480px){.card{padding:32px 24px}}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon"><img src="/logo.jpg" style="width:110px;height:110px;object-fit:cover"></div>
+            <h1>FrotaControl</h1>
+            <p class="subtitle">Controle de Veículos Empresarial</p>
+        </div>
+
+        <div class="alert" id="errorMsg" style="display:none">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorText">E-mail ou senha inválidos.</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> E-mail</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="email" required autocomplete="email" placeholder="seu@empresa.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Senha</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="senha" required autocomplete="current-password" placeholder="••••••••">
+                </div>
+            </div>
+            <button type="submit" class="btn" id="loginBtn">
+                <i class="fa-solid fa-right-to-bracket"></i> Entrar
+            </button>
+        </form>
+        <div style="text-align:center;margin-top:20px;display:flex;justify-content:center;gap:20px;flex-wrap:wrap">
+            <a href="#" id="forgotBtn" style="font-size:13px;color:#64748b;text-decoration:none">
+                <i class="fa-solid fa-key"></i> Esqueci minha senha
+            </a>
+            <a href="signup.html" style="font-size:13px;color:#2563eb;text-decoration:none;font-weight:600">
+                <i class="fa-solid fa-building"></i> Criar conta da empresa
+            </a>
+        </div>
+        <div id="resetMsg" style="display:none;margin-top:16px;padding:12px 14px;border-radius:10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;font-size:13px;align-items:center;gap:10px">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>E-mail de redefinição enviado! Verifique sua caixa de entrada.</span>
+        </div>
+    </div>
+    <div class="footer">© <span id="yr"></span> FrotaControl — Gestão de Frota Empresarial</div>
+</div>
+
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+<script type="module">
+import { initializeApp }            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+// Aplica brand
+document.title = `Login — ${brandConfig.name}`;
+document.querySelector('.logo h1').textContent  = brandConfig.name;
+document.querySelector('.subtitle').textContent = brandConfig.tagline;
+document.querySelector('.footer').innerHTML     = `© <span id="yr"></span> ${brandConfig.name} — Gestão de Frota Empresarial`;
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+document.getElementById('forgotBtn').addEventListener('click', async e => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    if (!email) {
+        document.getElementById('errorText').textContent = 'Digite seu e-mail acima antes de redefinir a senha.';
+        document.getElementById('errorMsg').style.display = 'flex';
+        return;
+    }
+    try {
+        await sendPasswordResetEmail(auth, email);
+        document.getElementById('resetMsg').style.display = 'flex';
+        document.getElementById('errorMsg').style.display = 'none';
+    } catch(err) {
+        document.getElementById('errorText').textContent = 'Não foi possível enviar o e-mail. Verifique o endereço digitado.';
+        document.getElementById('errorMsg').style.display = 'flex';
+    }
+});
+onAuthStateChanged(auth, user => { if (user) window.location.href = 'index.html'; });
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn   = document.getElementById('loginBtn');
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+    document.getElementById('errorMsg').style.display = 'none';
+
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        window.location.href = 'index.html';
+    } catch (err) {
+        const msgs = {
+            'auth/invalid-credential': 'E-mail ou senha inválidos.',
+            'auth/user-not-found':     'Usuário não encontrado.',
+            'auth/wrong-password':     'Senha incorreta.',
+            'auth/too-many-requests':  'Muitas tentativas. Aguarde alguns minutos.',
+        };
+        document.getElementById('errorText').textContent = msgs[err.code] || 'Erro ao entrar. Tente novamente.';
+        document.getElementById('errorMsg').style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+    }
+});
+</script>
+</body>
+</html>

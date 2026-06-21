@@ -1,0 +1,31 @@
+# Credenciais e segredos
+functions/.env
+functions/.env.*
+.env
+.env.*
+
+# Firebase
+.firebase/
+.firebaserc
+
+# Node
+node_modules/
+functions/node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+
+# PHP legado (não faz parte do app Firebase)
+*.php
+
+# Claude
+.claude/

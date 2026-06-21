@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrotaControl — Controle de Frota Empresarial</title>
+    <meta name="description" content="Gerencie sua frota do celular. GPS, combustível, manutenção e relatórios. Teste grátis por 7 dias.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh}
+
+        /* HERO */
+        .hero{background:linear-gradient(150deg,#1e3a5f 0%,#2563eb 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
+        .hero::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:40px;background:#f8fafc;clip-path:ellipse(55% 100% at 50% 100%)}
+        .logo-wrap{display:inline-flex;align-items:center;gap:12px;margin-bottom:28px}
+        .logo-img{width:52px;height:52px;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+        .logo-img img{width:52px;height:52px;object-fit:cover;display:block}
+        .logo-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px}
+        .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;margin-bottom:16px;backdrop-filter:blur(4px)}
+        .hero h1{font-size:clamp(26px,6vw,40px);font-weight:800;color:#fff;line-height:1.2;margin-bottom:14px}
+        .hero h1 em{font-style:normal;color:#93c5fd}
+        .hero p{font-size:15px;color:rgba(255,255,255,.85);line-height:1.65;max-width:360px;margin:0 auto 32px}
+
+        /* CTA PRINCIPAL */
+        .btn-main{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:340px;padding:16px 24px;background:#22c55e;color:#fff;border-radius:14px;text-decoration:none;font-size:16px;font-weight:800;box-shadow:0 8px 28px rgba(34,197,94,.45);transition:.15s;letter-spacing:-.2px}
+        .btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(34,197,94,.55)}
+        .btn-main .arrow{font-size:18px;transition:.15s}
+        .btn-main:hover .arrow{transform:translateX(4px)}
+        .trust{font-size:11px;color:rgba(255,255,255,.65);margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+        .trust span{display:flex;align-items:center;gap:4px}
+
+        /* SOCIAL PROOF */
+        .social-proof{padding:32px 24px 8px;text-align:center}
+        .social-proof p{font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+        .stars{display:flex;justify-content:center;gap:4px;margin-bottom:8px}
+        .stars i{color:#f59e0b;font-size:16px}
+        .review-text{font-size:13px;color:#64748b;font-style:italic;max-width:300px;margin:0 auto}
+
+        /* FEATURES */
+        .features{padding:24px 20px 32px;max-width:440px;margin:0 auto}
+        .feature-item{display:flex;align-items:flex-start;gap:14px;padding:16px;background:#fff;border-radius:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+        .feat-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+        .feat-body h3{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:3px}
+        .feat-body p{font-size:12px;color:#64748b;line-height:1.5}
+
+        /* MOCKUP MINI */
+        .mockup-section{padding:0 20px 32px;max-width:440px;margin:0 auto}
+        .mockup{background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:18px;padding:18px;box-shadow:0 12px 40px rgba(37,99,235,.2)}
+        .mockup-bar{display:flex;gap:5px;margin-bottom:14px}
+        .mockup-bar span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3)}
+        .mockup-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .mock-card{background:rgba(255,255,255,.1);border-radius:10px;padding:14px}
+        .mock-val{font-size:22px;font-weight:800;color:#fff;margin-bottom:3px}
+        .mock-lbl{font-size:10px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px}
+        .mock-trend{font-size:10px;color:#4ade80;margin-top:4px}
+
+        /* PLANOS RÁPIDOS */
+        .planos-section{padding:0 20px 32px;max-width:440px;margin:0 auto}
+        .planos-title{font-size:14px;font-weight:700;color:#64748b;text-align:center;margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px}
+        .planos-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+        .plano-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 8px;text-align:center}
+        .plano-card.destaque{border-color:#2563eb;background:#eff6ff}
+        .plano-nome{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px}
+        .plano-card.destaque .plano-nome{color:#2563eb}
+        .plano-preco{font-size:14px;font-weight:800;color:#1e293b}
+        .plano-preco span{font-size:10px;font-weight:500;color:#94a3b8}
+        .plano-lim{font-size:10px;color:#64748b;margin-top:3px}
+
+        /* CTA BOTTOM */
+        .cta-bottom{padding:0 20px 48px;max-width:440px;margin:0 auto;text-align:center}
+        .cta-bottom p{font-size:13px;color:#94a3b8;margin-bottom:16px}
+
+        /* FOOTER */
+        footer{text-align:center;padding:20px 24px;border-top:1px solid #e2e8f0}
+        footer p{font-size:12px;color:#94a3b8}
+        footer a{color:#64748b;text-decoration:none}
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="logo-wrap">
+        <div class="logo-img"><img src="/logo.jpg" alt="FrotaControl" id="heroLogoImg"></div>
+        <div class="logo-name" id="heroLogoName">FrotaControl</div>
+    </div>
+    <div class="hero-badge"><i class="fa-solid fa-gift"></i> <span id="heroBadge">7 dias grátis</span> — sem cartão</div>
+    <h1>Controle sua frota<br><em>de onde estiver</em></h1>
+    <p>GPS, abastecimento, manutenção e relatórios completos. Tudo no celular, em minutos.</p>
+    <a href="signup.html?ref=instagram" class="btn-main" id="heroBtn">
+        <i class="fa-solid fa-rocket"></i>
+        Começar grátis agora
+        <i class="fa-solid fa-arrow-right arrow"></i>
+    </a>
+    <div class="trust">
+        <span><i class="fa-solid fa-shield-halved"></i> Sem cartão</span>
+        <span>·</span>
+        <span><i class="fa-solid fa-ban"></i> Sem contrato</span>
+        <span>·</span>
+        <span><i class="fa-solid fa-xmark"></i> Cancele quando quiser</span>
+    </div>
+</div>
+
+<!-- MOCKUP -->
+<div style="height:32px"></div>
+<div class="mockup-section">
+    <div class="mockup">
+        <div class="mockup-bar"><span></span><span></span><span></span></div>
+        <div class="mockup-grid">
+            <div class="mock-card"><div class="mock-val">12</div><div class="mock-lbl">Veículos</div><div class="mock-trend">↑ 2 este mês</div></div>
+            <div class="mock-card"><div class="mock-val">8</div><div class="mock-lbl">Em uso agora</div><div class="mock-trend">● GPS ativo</div></div>
+            <div class="mock-card"><div class="mock-val">R$4.2k</div><div class="mock-lbl">Combustível/mês</div><div class="mock-trend">↓ 12% vs anterior</div></div>
+            <div class="mock-card"><div class="mock-val">3</div><div class="mock-lbl">Manutenções</div><div class="mock-trend" style="color:#fb923c">⚠ 1 vencida</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+    <div class="feature-item">
+        <div class="feat-icon" style="background:#eff6ff;color:#2563eb"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div class="feat-body">
+            <h3>Rastreamento GPS em tempo real</h3>
+            <p>Veja cada veículo no mapa pelo celular do motorista ou GPS físico instalado.</p>
+        </div>
+    </div>
+    <div class="feature-item">
+        <div class="feat-icon" style="background:#f0fdf4;color:#16a34a"><i class="fa-solid fa-gas-pump"></i></div>
+        <div class="feat-body">
+            <h3>Controle de combustível</h3>
+            <p>Registre abastecimentos e monitore consumo médio por veículo.</p>
+        </div>
+    </div>
+    <div class="feature-item">
+        <div class="feat-icon" style="background:#fef3c7;color:#d97706"><i class="fa-solid fa-wrench"></i></div>
+        <div class="feat-body">
+            <h3>Alertas de manutenção</h3>
+            <p>Avisos automáticos por data e KM: óleo, pneus, correia e muito mais.</p>
+        </div>
+    </div>
+    <div class="feature-item">
+        <div class="feat-icon" style="background:#fdf4ff;color:#9333ea"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="feat-body">
+            <h3>Relatórios e dashboard</h3>
+            <p>Painel com indicadores em tempo real e relatórios exportáveis.</p>
+        </div>
+    </div>
+</div>
+
+<!-- PLANOS RÁPIDOS -->
+<div class="planos-section">
+    <div class="planos-title">Planos a partir de</div>
+    <div class="planos-row">
+        <div class="plano-card">
+            <div class="plano-nome">Básico</div>
+            <div class="plano-preco" id="precoBasico">R$79<span>/mês</span></div>
+            <div class="plano-lim">até 5 veículos</div>
+        </div>
+        <div class="plano-card destaque">
+            <div class="plano-nome">Profissional</div>
+            <div class="plano-preco" id="precoPro">R$149<span>/mês</span></div>
+            <div class="plano-lim">até 20 veículos</div>
+        </div>
+        <div class="plano-card">
+            <div class="plano-nome">Empresarial</div>
+            <div class="plano-preco" id="precoEmp">R$299<span>/mês</span></div>
+            <div class="plano-lim">ilimitado</div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA BOTTOM -->
+<div class="cta-bottom">
+    <p>Mais de 5 minutos para configurar? Devolvemos seu dinheiro. 😄</p>
+    <a href="signup.html?ref=instagram" class="btn-main" id="bottomBtn">
+        <i class="fa-solid fa-rocket"></i>
+        Criar conta grátis
+        <i class="fa-solid fa-arrow-right arrow"></i>
+    </a>
+    <div style="margin-top:14px;font-size:12px;color:#94a3b8">
+        Já tem conta? <a href="login.html" style="color:#2563eb;text-decoration:none;font-weight:600">Entrar →</a>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <p id="footerTxt">© 2025 FrotaControl</p>
+</footer>
+
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+// Aplica dados da marca
+document.getElementById('heroLogoName').textContent = brandConfig.name;
+document.getElementById('heroBadge').textContent    = `${brandConfig.trialDays} dias grátis`;
+document.title = `${brandConfig.name} — Controle de Frota Empresarial`;
+document.getElementById('footerTxt').textContent = `© ${new Date().getFullYear()} ${brandConfig.name}`;
+
+// Carrega preços do Firestore
+(async () => {
+    try {
+        const db   = getFirestore(initializeApp(firebaseConfig, 'insta'));
+        const snap = await getDoc(doc(db, 'configuracoes', 'planos'));
+        if (!snap.exists()) return;
+        const d = snap.data();
+        function fmt(v) { return 'R$' + Number(v).toLocaleString('pt-BR') + '<span>/mês</span>'; }
+        if (d.basico)       document.getElementById('precoBasico').innerHTML = fmt(d.basico);
+        if (d.profissional) document.getElementById('precoPro').innerHTML    = fmt(d.profissional);
+        if (d.empresarial)  document.getElementById('precoEmp').innerHTML    = fmt(d.empresarial);
+    } catch(_) {}
+})();
+</script>
+</body>
+</html>

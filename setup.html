@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup — FrotaControl</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e3a5f,#2563eb);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .card{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+        .logo{text-align:center;margin-bottom:28px}
+        .logo-icon{width:60px;height:60px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;color:#fff;margin-bottom:12px}
+        h1{font-size:20px;color:#1e293b}
+        p.sub{font-size:13px;color:#64748b;margin-top:4px}
+        .step{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;color:#1d4ed8}
+        .step ol{margin-top:8px;padding-left:18px}
+        .step li{margin-top:6px;line-height:1.5}
+        .step code{background:#dbeafe;padding:2px 6px;border-radius:4px;font-size:12px}
+        .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9}
+        .form-group{margin-bottom:14px}
+        label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:6px}
+        input{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#1e293b;font-family:inherit}
+        input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+        .btn{width:100%;padding:13px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+        .btn:hover{opacity:.9}
+        .btn:disabled{opacity:.6;cursor:not-allowed}
+        .btn-green{background:linear-gradient(135deg,#16a34a,#15803d)}
+        .btn-orange{background:linear-gradient(135deg,#d97706,#b45309)}
+        .btn+.btn{margin-top:10px}
+        .alert{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px}
+        .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+        .alert-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+        .alert-info{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+        a.go{display:block;margin-top:16px;padding:13px;background:#16a34a;color:#fff;border-radius:8px;text-align:center;text-decoration:none;font-weight:600;font-size:14px}
+        #migrateArea{display:none;margin-top:20px;border-top:1px solid #f1f5f9;padding-top:20px}
+        .progress{background:#e2e8f0;border-radius:99px;height:8px;margin-top:8px;overflow:hidden}
+        .progress-bar{height:100%;background:#2563eb;border-radius:99px;transition:width .3s}
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-fire"></i></div>
+        <h1>FrotaControl — Setup</h1>
+        <p class="sub">Configuração inicial do sistema</p>
+    </div>
+
+    <div class="step">
+        <strong><i class="fa-solid fa-list-ol"></i> Pré-requisitos:</strong>
+        <ol>
+            <li>Editar <code>assets/js/config.js</code> com as credenciais do Firebase</li>
+            <li>Ativar <em>Authentication → E-mail/Senha</em> no Firebase Console</li>
+            <li>Criar o banco <strong>Firestore Database</strong> (modo produção)</li>
+            <li>Publicar as regras de segurança do arquivo <code>firestore.rules</code></li>
+        </ol>
+    </div>
+
+    <div id="alertArea"></div>
+
+    <form id="setupForm">
+        <div class="section-title">Empresa</div>
+        <div class="form-group">
+            <label>Nome da Empresa</label>
+            <input type="text" id="nomeEmpresa" required placeholder="Ex: Transportes Silva Ltda" value="">
+        </div>
+
+        <div class="section-title">Administrador</div>
+        <div class="form-group">
+            <label>Nome do Administrador</label>
+            <input type="text" id="nome" required placeholder="Ex: João Silva" value="Administrador">
+        </div>
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="email" required placeholder="admin@empresa.com" value="admin@empresa.com">
+        </div>
+        <div class="form-group">
+            <label>Senha (mín. 6 caracteres)</label>
+            <input type="password" id="senha" required placeholder="••••••••" minlength="6" value="Admin@123">
+        </div>
+        <button type="submit" class="btn" id="submitBtn">
+            <i class="fa-solid fa-rocket"></i> Criar Empresa e Administrador
+        </button>
+    </form>
+
+    <div id="migrateArea">
+        <p style="font-size:13px;color:#64748b;margin-bottom:12px">
+            <i class="fa-solid fa-circle-info" style="color:#2563eb"></i>
+            Se você já tinha dados cadastrados (veículos, motoristas etc.), clique abaixo para vinculá-los à empresa criada.
+        </p>
+        <div id="migrateProgress" style="display:none">
+            <p id="migrateStatus" style="font-size:12px;color:#64748b;margin-bottom:6px"></p>
+            <div class="progress"><div class="progress-bar" id="migrateBar" style="width:0%"></div></div>
+        </div>
+        <button class="btn btn-orange" id="migrateBtn">
+            <i class="fa-solid fa-database"></i> Migrar Dados Existentes
+        </button>
+    </div>
+
+    <div id="successArea" style="display:none">
+        <a href="login.html" class="go"><i class="fa-solid fa-right-to-bracket"></i> Ir para o Login</a>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp }                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+    getFirestore, doc, setDoc, addDoc, collection, getDocs, writeBatch, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig } from './assets/js/config.js';
+
+let app, auth, db, createdEmpresaId;
+try {
+    app  = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db   = getFirestore(app);
+} catch(e) {
+    showAlert('Erro ao inicializar Firebase. Verifique config.js: ' + e.message, 'danger');
+}
+
+document.getElementById('setupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn         = document.getElementById('submitBtn');
+    const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
+    const nome        = document.getElementById('nome').value.trim();
+    const email       = document.getElementById('email').value.trim();
+    const senha       = document.getElementById('senha').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Configurando...';
+
+    try {
+        let uid;
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, senha);
+            uid = cred.user.uid;
+        } catch (err) {
+            if (err.code === 'auth/email-already-in-use') {
+                showAlert('Usuário já existe. Fazendo login para atualizar perfil...', 'info');
+                const cred = await signInWithEmailAndPassword(auth, email, senha);
+                uid = cred.user.uid;
+            } else {
+                throw err;
+            }
+        }
+
+        // Cria empresa
+        const empresaRef = await addDoc(collection(db, 'empresas'), {
+            nome:      nomeEmpresa,
+            adminUid:  uid,
+            ativo:     true,
+            plano:     'basico',
+            criadoEm:  serverTimestamp()
+        });
+        createdEmpresaId = empresaRef.id;
+
+        // Cria/atualiza perfil do admin com empresaId
+        await setDoc(doc(db, 'usuarios', uid), {
+            nome, email, perfil: 'admin', ativo: true,
+            empresaId: createdEmpresaId,
+            criadoEm: serverTimestamp()
+        });
+
+        showAlert(`Empresa "${nomeEmpresa}" e administrador criados com sucesso!`, 'success');
+        document.getElementById('setupForm').style.display = 'none';
+        document.getElementById('migrateArea').style.display = 'block';
+        document.getElementById('successArea').style.display = 'block';
+
+    } catch (err) {
+        const msgs = {
+            'auth/invalid-email':           'E-mail inválido.',
+            'auth/weak-password':           'Senha muito fraca. Use ao menos 6 caracteres.',
+            'auth/wrong-password':          'Senha incorreta.',
+            'auth/invalid-credential':      'Credenciais inválidas.',
+            'auth/configuration-not-found': 'Firebase não configurado. Verifique config.js.',
+        };
+        showAlert(msgs[err.code] || 'Erro: ' + err.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Criar Empresa e Administrador';
+    }
+});
+
+document.getElementById('migrateBtn').addEventListener('click', async () => {
+    if (!createdEmpresaId) { showAlert('Execute o setup primeiro.', 'danger'); return; }
+
+    const btn = document.getElementById('migrateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Migrando...';
+
+    const cols = ['veiculos','motoristas','utilizacoes','multas','abastecimentos','escalas','manutencoes'];
+    const statusEl = document.getElementById('migrateStatus');
+    const barEl    = document.getElementById('migrateBar');
+    document.getElementById('migrateProgress').style.display = 'block';
+
+    let total = 0, done = 0;
+
+    try {
+        // Conta documentos sem empresaId
+        for (const col of cols) {
+            const snap = await getDocs(collection(db, col));
+            snap.docs.forEach(d => { if (!d.data().empresaId) total++; });
+        }
+
+        if (total === 0) {
+            showAlert('Nenhum dado sem empresa encontrado. Tudo já está migrado!', 'success');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-database"></i> Migrar Dados Existentes';
+            return;
+        }
+
+        statusEl.textContent = `Migrando 0 / ${total} documentos...`;
+
+        for (const col of cols) {
+            const snap = await getDocs(collection(db, col));
+            const toMigrate = snap.docs.filter(d => !d.data().empresaId);
+
+            // Processa em batches de 400
+            for (let i = 0; i < toMigrate.length; i += 400) {
+                const batch = writeBatch(db);
+                toMigrate.slice(i, i + 400).forEach(d => {
+                    batch.update(doc(db, col, d.id), { empresaId: createdEmpresaId });
+                    done++;
+                });
+                await batch.commit();
+                statusEl.textContent = `Migrando ${done} / ${total} documentos...`;
+                barEl.style.width = Math.round((done / total) * 100) + '%';
+            }
+        }
+
+        showAlert(`Migração concluída! ${done} documentos vinculados à empresa.`, 'success');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Migração concluída';
+
+    } catch (err) {
+        showAlert('Erro na migração: ' + err.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-database"></i> Tentar novamente';
+    }
+});
+
+function showAlert(msg, type) {
+    document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-${type}"><i class="fa-solid fa-${type==='success'?'circle-check':type==='info'?'circle-info':'circle-xmark'}"></i> ${msg}</div>`;
+}
+</script>
+</body>
+</html>

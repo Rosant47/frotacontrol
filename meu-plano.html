@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Plano — FrotaControl</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;min-height:100vh;padding:24px 16px 48px}
+        .container{max-width:520px;margin:0 auto}
+        .back{display:inline-flex;align-items:center;gap:8px;color:#64748b;font-size:13px;text-decoration:none;margin-bottom:24px}
+        .back:hover{color:#1e293b}
+        .card{background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 2px 16px rgba(0,0,0,.07);margin-bottom:16px}
+        .card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:16px}
+        .plan-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .plan-name{font-size:22px;font-weight:800;color:#1e293b}
+        .plan-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+        .badge-ativo{background:#f0fdf4;color:#16a34a}
+        .badge-pausado{background:#fef9c3;color:#854d0e}
+        .badge-cancelado{background:#fef2f2;color:#dc2626}
+        .badge-gratuito{background:#f1f5f9;color:#64748b}
+        .badge-pendente{background:#eff6ff;color:#2563eb}
+        .plan-price{font-size:28px;font-weight:800;color:#1e293b;margin:12px 0 4px}
+        .plan-price span{font-size:14px;font-weight:500;color:#64748b}
+        .plan-desc{font-size:13px;color:#64748b}
+        .divider{border:none;border-top:1px solid #f1f5f9;margin:20px 0}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px}
+        .info-label{color:#64748b}
+        .info-value{color:#1e293b;font-weight:600}
+        .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;border:none;font-family:inherit;width:100%;transition:opacity .15s;margin-bottom:10px}
+        .btn:hover{opacity:.88}
+        .btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+        .btn-ghost{background:transparent;color:#64748b;border:1.5px solid #e2e8f0}
+        .btn-red{background:transparent;color:#dc2626;border:1.5px solid #fca5a5;font-size:13px;padding:10px}
+        .skeleton{background:#f1f5f9;border-radius:8px;height:20px;width:60%;animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+        /* MODAL */
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:9999;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.open{display:flex}
+        .modal{background:#fff;border-radius:20px;padding:28px 24px;max-width:480px;width:100%;position:relative;max-height:92vh;overflow-y:auto}
+        .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer}
+        .modal-title{font-size:16px;font-weight:800;color:#1e293b;margin-bottom:4px}
+        .modal-sub{font-size:13px;color:#64748b;margin-bottom:20px}
+        .modal-success{background:#f0fdf4;border:1.5px solid #86efac;border-radius:9px;padding:10px 14px;font-size:13px;color:#15803d;margin-top:14px;display:none;text-align:center}
+        .modal-success.show{display:block}
+        .lock-line{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#94a3b8;margin-top:16px}
+        .brick-loading{text-align:center;padding:32px 0;color:#64748b;font-size:14px}
+        @media(max-width:480px){body{padding:16px 12px 40px}.card{padding:20px 16px}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back"><i class="fa-solid fa-arrow-left"></i> Voltar ao sistema</a>
+
+    <!-- Card plano atual -->
+    <div class="card">
+        <div class="card-title">Plano atual</div>
+        <div class="plan-row">
+            <div class="plan-name" id="planNome">—</div>
+            <div class="plan-badge" id="planBadge">—</div>
+        </div>
+        <div class="plan-price" id="planPreco"><div class="skeleton"></div></div>
+        <div class="plan-desc" id="planDesc"></div>
+        <hr class="divider">
+        <div class="info-row">
+            <span class="info-label">Status do pagamento</span>
+            <span class="info-value" id="infoStatus">—</span>
+        </div>
+        <div class="info-row" id="rowAtivadoEm" style="display:none">
+            <span class="info-label">Ativo desde</span>
+            <span class="info-value" id="infoAtivado">—</span>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="card" id="cardAcoes" style="display:none">
+        <div class="card-title">Gerenciar assinatura</div>
+        <button class="btn btn-primary" id="btnTrocarCartao">
+            <i class="fa-solid fa-credit-card"></i> Trocar cartão de pagamento
+        </button>
+        <a href="planos.html" class="btn btn-ghost">
+            <i class="fa-solid fa-arrow-up"></i> Fazer upgrade de plano
+        </a>
+        <hr class="divider">
+        <button class="btn btn-red" id="btnCancelar">
+            <i class="fa-solid fa-xmark"></i> Cancelar assinatura
+        </button>
+    </div>
+
+    <div class="card" id="cardSemPlano" style="display:none">
+        <div class="card-title">Sem assinatura ativa</div>
+        <p style="font-size:14px;color:#64748b;margin-bottom:16px">Você ainda não tem um plano ativo. Escolha um plano para desbloquear todos os recursos.</p>
+        <a href="planos.html" class="btn btn-primary">
+            <i class="fa-solid fa-rocket"></i> Ver planos e assinar
+        </a>
+    </div>
+</div>
+
+<!-- MODAL TROCAR CARTÃO -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <button class="modal-close" id="modalClose">✕</button>
+        <div class="modal-title">Trocar cartão de pagamento</div>
+        <div class="modal-sub">O novo cartão será usado nas próximas cobranças da assinatura.</div>
+        <div id="cardBrickContainer">
+            <div class="brick-loading"><i class="fa-solid fa-spinner fa-spin"></i> Carregando formulário…</div>
+        </div>
+        <div class="modal-success" id="modalSuccess">✅ Cartão atualizado com sucesso!</div>
+        <div class="lock-line"><i class="fa-solid fa-shield-halved"></i> Dados protegidos · SSL · MercadoPago</div>
+    </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { firebaseConfig, brandConfig }  from './assets/js/config.js';
+
+document.title = `Meu Plano — ${brandConfig.name}`;
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const fns  = getFunctions(app, 'us-central1');
+
+const PLANO_INFO = {
+    basico:       { nome: 'Básico',       desc: 'Até 5 veículos' },
+    profissional: { nome: 'Profissional', desc: 'Até 20 veículos' },
+    empresarial:  { nome: 'Empresarial',  desc: 'Veículos ilimitados' },
+    gratuito:     { nome: 'Trial',        desc: `${brandConfig.trialDays} dias grátis` },
+    pendente:     { nome: 'Pendente',     desc: 'Aguardando ativação' },
+};
+
+const STATUS_MAP = {
+    ativo:     { txt: 'Ativo',     cls: 'badge-ativo' },
+    pausado:   { txt: 'Pausado',   cls: 'badge-pausado' },
+    cancelado: { txt: 'Cancelado', cls: 'badge-cancelado' },
+    pendente:  { txt: 'Pendente',  cls: 'badge-pendente' },
+    gratuito:  { txt: 'Trial',     cls: 'badge-gratuito' },
+};
+
+onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    try {
+        const profSnap = await getDoc(doc(db, 'usuarios', user.uid));
+        if (!profSnap.exists()) return;
+        const empresaId = profSnap.data().empresaId;
+
+        const empSnap = await getDoc(doc(db, 'empresas', empresaId));
+        if (!empSnap.exists()) return;
+        const emp = empSnap.data();
+
+        const plano  = emp.plano || 'gratuito';
+        const status = emp.pagamentoStatus || plano;
+        const info   = PLANO_INFO[plano] || { nome: plano, desc: '' };
+        const st     = STATUS_MAP[status] || STATUS_MAP.gratuito;
+
+        document.getElementById('planNome').textContent  = info.nome;
+        document.getElementById('planDesc').textContent  = info.desc;
+        document.getElementById('planBadge').textContent = st.txt;
+        document.getElementById('planBadge').className   = `plan-badge ${st.cls}`;
+
+        try {
+            const cfgSnap = await getDoc(doc(db, 'configuracoes', 'planos'));
+            if (cfgSnap.exists() && cfgSnap.data()[plano]) {
+                const v = cfgSnap.data()[plano];
+                document.getElementById('planPreco').innerHTML =
+                    'R$' + Number(v).toLocaleString('pt-BR') + '<span>/mês</span>';
+            } else if (plano === 'gratuito' || plano === 'pendente') {
+                document.getElementById('planPreco').innerHTML = '<span style="font-size:16px">—</span>';
+            }
+        } catch(_) {}
+
+        if (emp.planoAtivoEm?.toDate) {
+            document.getElementById('rowAtivadoEm').style.display = 'flex';
+            document.getElementById('infoAtivado').textContent =
+                emp.planoAtivoEm.toDate().toLocaleDateString('pt-BR');
+        }
+        document.getElementById('infoStatus').textContent = st.txt;
+
+        const temAssinatura = ['basico','profissional','empresarial'].includes(plano) && emp.mpSubscriptionId;
+        document.getElementById('cardAcoes').style.display    = temAssinatura ? 'block' : 'none';
+        document.getElementById('cardSemPlano').style.display = temAssinatura ? 'none'  : 'block';
+
+        document.getElementById('btnCancelar')?.addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja cancelar sua assinatura?')) {
+                window.open('https://www.mercadopago.com.br/subscriptions', '_blank');
+            }
+        });
+    } catch(e) { console.error(e); }
+});
+
+// ── Bricks MP ──
+const mp = new MercadoPago(brandConfig.mpPublicKey, { locale: 'pt-BR' });
+let brickController = null;
+
+async function initBrick() {
+    if (brickController) {
+        try { await brickController.unmount(); } catch(_) {}
+        brickController = null;
+    }
+    document.getElementById('cardBrickContainer').innerHTML = '';
+
+    try {
+        const bricksBuilder = mp.bricks();
+        brickController = await bricksBuilder.create('cardPayment', 'cardBrickContainer', {
+            initialization: { amount: 1 },
+            callbacks: {
+                onReady: () => {},
+                onSubmit: async (formData) => {
+                    try {
+                        const atualizarCartao = httpsCallable(fns, 'atualizarCartao');
+                        await atualizarCartao({ cardToken: formData.token });
+                        document.getElementById('modalSuccess').classList.add('show');
+                        setTimeout(() => document.getElementById('modalOverlay').classList.remove('open'), 2000);
+                    } catch(err) {
+                        return Promise.reject(err?.message || 'Erro ao atualizar cartão. Tente novamente.');
+                    }
+                },
+                onError: err => {
+                    console.error('Brick error:', err);
+                    document.getElementById('cardBrickContainer').innerHTML =
+                        `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:14px;font-size:13px;color:#dc2626;text-align:center">Erro: ${err?.message || JSON.stringify(err)}</div>`;
+                },
+            },
+        });
+    } catch(err) {
+        console.error('Brick init error:', err);
+        document.getElementById('cardBrickContainer').innerHTML =
+            `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:14px;font-size:13px;color:#dc2626;text-align:center">Não foi possível carregar o formulário.<br><small>${err?.message || err}</small></div>`;
+    }
+}
+
+document.getElementById('btnTrocarCartao')?.addEventListener('click', () => {
+    document.getElementById('modalSuccess').classList.remove('show');
+    document.getElementById('modalOverlay').classList.add('open');
+    requestAnimationFrame(() => setTimeout(initBrick, 100));
+});
+
+document.getElementById('modalClose').addEventListener('click', () =>
+    document.getElementById('modalOverlay').classList.remove('open'));
+document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay'))
+        document.getElementById('modalOverlay').classList.remove('open');
+});
+</script>
+</body>
+</html>

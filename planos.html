@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos — FrotaControl</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);min-height:100vh;padding:20px 16px 40px}
+        .container{max-width:920px;margin:0 auto}
+        header{text-align:center;padding:40px 0 36px;color:#fff}
+        header h1{font-size:32px;font-weight:800;margin-bottom:10px}
+        header p{font-size:16px;opacity:.85;max-width:480px;margin:0 auto}
+        .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:32px}
+        .plan{background:#fff;border-radius:20px;padding:28px 24px;position:relative;display:flex;flex-direction:column}
+        .plan.popular{border:3px solid #2563eb;box-shadow:0 16px 48px rgba(37,99,235,.25)}
+        .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
+        .plan-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:8px}
+        .plan-price{font-size:36px;font-weight:800;color:#1e293b;margin-bottom:4px}
+        .plan-price span{font-size:16px;font-weight:500;color:#64748b}
+        .plan-desc{font-size:13px;color:#64748b;margin-bottom:20px;border-bottom:1px solid #f1f5f9;padding-bottom:16px}
+        .features{list-style:none;flex:1;margin-bottom:24px}
+        .features li{font-size:13px;color:#374151;padding:5px 0;display:flex;align-items:center;gap:9px}
+        .features li i.ok{color:#16a34a;font-size:12px;flex-shrink:0}
+        .features li i.no{color:#d1d5db;font-size:12px;flex-shrink:0}
+        .features li.off{color:#9ca3af}
+        .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;text-align:center;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s;width:100%}
+        .btn:hover{opacity:.88}
+        .btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+        .btn-outline{background:transparent;color:#2563eb;border:2px solid #2563eb}
+        .faq{background:rgba(255,255,255,.1);border-radius:16px;padding:28px 24px;margin-bottom:24px}
+        .faq h2{color:#fff;font-size:18px;font-weight:700;margin-bottom:16px;text-align:center}
+        .faq-item{margin-bottom:14px}
+        .faq-item summary{color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;padding:4px 0}
+        .faq-item p{color:rgba(255,255,255,.7);font-size:13px;margin-top:6px;line-height:1.6;padding-left:4px}
+        .back{text-align:center;margin-top:8px}
+        .back a{color:rgba(255,255,255,.7);font-size:13px;text-decoration:none}
+        .back a:hover{color:#fff}
+        .secure-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);color:#fff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;margin-bottom:24px}
+        @media(max-width:600px){header{padding:28px 0 24px}header h1{font-size:24px}.plan-price{font-size:28px}.plans{grid-template-columns:1fr}.faq{padding:20px 16px}}
+        @media(max-width:480px){body{padding:12px 12px 32px}}
+
+        /* MODAL */
+        .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.open{display:flex}
+        .modal{background:#fff;border-radius:20px;padding:28px 24px;max-width:420px;width:100%;position:relative;max-height:92vh;overflow-y:auto}
+        .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;line-height:1}
+        .modal-title{font-size:17px;font-weight:800;color:#1e293b;margin-bottom:4px}
+        .modal-plan{font-size:13px;color:#64748b;margin-bottom:20px}
+        .modal-plan strong{color:#2563eb}
+        .field-group{margin-bottom:14px}
+        .field-group label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px}
+        .field-wrap{border:1.5px solid #e2e8f0;border-radius:9px;padding:10px 12px;background:#fff}
+        .field-wrap input{width:100%;border:none;outline:none;font-size:14px;color:#1e293b;font-family:inherit;background:transparent}
+        .btn-pagar{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;transition:opacity .15s}
+        .btn-pagar:hover{opacity:.9}
+        .btn-pagar:disabled{opacity:.5;cursor:not-allowed}
+        .modal-error{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:10px 14px;font-size:13px;color:#dc2626;margin-top:14px;display:none}
+        .modal-error.show{display:block}
+        .lock-line{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#94a3b8;margin-top:12px}
+        .section-label{font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+        .section-divider{border-top:1px solid #f1f5f9;margin:16px 0}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1 id="brandTitle">FrotaControl</h1>
+        <p>Escolha o plano ideal para sua frota. Sem contratos, cancele quando quiser.</p>
+        <div style="margin-top:16px">
+            <span class="secure-badge"><i class="fa-solid fa-lock"></i> Pagamento seguro — cartão processado pelo MercadoPago</span>
+        </div>
+    </header>
+
+    <div class="plans">
+        <div class="plan">
+            <div class="plan-name">Básico</div>
+            <div class="plan-price" id="precoBasico">R$79<span>/mês</span></div>
+            <div class="plan-desc">Ideal para frotas pequenas</div>
+            <ul class="features">
+                <li><i class="fa-solid fa-check ok"></i> Até <b>5 veículos</b></li>
+                <li><i class="fa-solid fa-check ok"></i> Motoristas ilimitados</li>
+                <li><i class="fa-solid fa-check ok"></i> Utilização diária</li>
+                <li><i class="fa-solid fa-check ok"></i> Controle de combustível</li>
+                <li><i class="fa-solid fa-check ok"></i> Multas e manutenção</li>
+                <li><i class="fa-solid fa-check ok"></i> Rastreamento via app</li>
+                <li class="off"><i class="fa-solid fa-xmark no"></i> Dispositivos GPS hardware</li>
+                <li class="off"><i class="fa-solid fa-xmark no"></i> Relatórios avançados</li>
+            </ul>
+            <button class="btn btn-outline" data-plano="basico" data-nome="Básico" data-valor="79">Assinar Básico</button>
+        </div>
+        <div class="plan popular">
+            <div class="badge">Mais popular</div>
+            <div class="plan-name">Profissional</div>
+            <div class="plan-price" id="precoPro">R$149<span>/mês</span></div>
+            <div class="plan-desc">Para frotas em crescimento</div>
+            <ul class="features">
+                <li><i class="fa-solid fa-check ok"></i> Até <b>20 veículos</b></li>
+                <li><i class="fa-solid fa-check ok"></i> Motoristas ilimitados</li>
+                <li><i class="fa-solid fa-check ok"></i> Utilização diária</li>
+                <li><i class="fa-solid fa-check ok"></i> Controle de combustível</li>
+                <li><i class="fa-solid fa-check ok"></i> Multas e manutenção</li>
+                <li><i class="fa-solid fa-check ok"></i> Rastreamento via app</li>
+                <li><i class="fa-solid fa-check ok"></i> Dispositivos GPS hardware</li>
+                <li><i class="fa-solid fa-check ok"></i> Relatórios avançados</li>
+            </ul>
+            <button class="btn btn-primary" data-plano="profissional" data-nome="Profissional" data-valor="149">Assinar Profissional</button>
+        </div>
+        <div class="plan">
+            <div class="plan-name">Empresarial</div>
+            <div class="plan-price" id="precoEmp">R$299<span>/mês</span></div>
+            <div class="plan-desc">Frota grande sem limites</div>
+            <ul class="features">
+                <li><i class="fa-solid fa-check ok"></i> Veículos <b>ilimitados</b></li>
+                <li><i class="fa-solid fa-check ok"></i> Motoristas ilimitados</li>
+                <li><i class="fa-solid fa-check ok"></i> Tudo do plano Pro</li>
+                <li><i class="fa-solid fa-check ok"></i> Suporte prioritário</li>
+                <li><i class="fa-solid fa-check ok"></i> Onboarding dedicado</li>
+                <li><i class="fa-solid fa-check ok"></i> Logo e cores customizadas</li>
+                <li><i class="fa-solid fa-check ok"></i> Relatórios PDF</li>
+                <li><i class="fa-solid fa-check ok"></i> SLA garantido</li>
+            </ul>
+            <button class="btn btn-outline" data-plano="empresarial" data-nome="Empresarial" data-valor="299">Assinar Empresarial</button>
+        </div>
+    </div>
+
+    <div class="faq">
+        <h2>Dúvidas frequentes</h2>
+        <details class="faq-item"><summary>Preciso de cartão de crédito para o trial?</summary><p>Não. O trial é completamente gratuito e não requer cartão.</p></details>
+        <details class="faq-item"><summary>Posso cancelar a qualquer momento?</summary><p>Sim. Sem fidelidade. Cancele quando quiser — não será cobrado no próximo ciclo.</p></details>
+        <details class="faq-item"><summary>Quais formas de pagamento são aceitas?</summary><p>Cartão de crédito — processado com segurança pelo MercadoPago direto nesta página.</p></details>
+        <details class="faq-item"><summary>Em quanto tempo minha conta é ativada?</summary><p>Automaticamente assim que o pagamento é confirmado — geralmente em segundos.</p></details>
+    </div>
+    <div class="back"><a href="index.html"><i class="fa-solid fa-arrow-left"></i> Voltar ao sistema</a></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <button class="modal-close" id="modalClose" type="button">✕</button>
+        <div class="modal-title">Finalizar assinatura</div>
+        <div class="modal-plan">Plano <strong id="modalPlanNome">—</strong> · <strong id="modalPlanPreco">—</strong>/mês</div>
+
+        <form id="pay-form" novalidate>
+            <div id="sectionConta" style="display:none">
+                <div class="section-label">1. Criar sua conta</div>
+                <div class="field-group">
+                    <label>Nome da empresa</label>
+                    <div class="field-wrap"><input type="text" id="nomeEmpresa" placeholder="Ex: Transportes Silva"></div>
+                </div>
+                <div class="field-group">
+                    <label>E-mail</label>
+                    <div class="field-wrap"><input type="email" id="signupEmail" placeholder="seu@email.com"></div>
+                </div>
+                <div class="field-group">
+                    <label>Senha</label>
+                    <div class="field-wrap"><input type="password" id="signupSenha" placeholder="Mínimo 6 caracteres"></div>
+                </div>
+                <div class="section-divider"></div>
+            </div>
+
+            <div class="field-group" id="fieldEmail" style="display:none">
+                <label>E-mail para pagamento</label>
+                <div class="field-wrap"><input type="email" id="payerEmail" placeholder="seu@email.com" autocomplete="email"></div>
+            </div>
+
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:9px;padding:12px 14px;font-size:13px;color:#1e40af;display:flex;align-items:flex-start;gap:10px;margin-bottom:4px">
+                <i class="fa-solid fa-shield-halved" style="margin-top:1px;flex-shrink:0"></i>
+                <span>Você será redirecionado ao MercadoPago para inserir os dados do cartão com segurança e retornará automaticamente após a confirmação.</span>
+            </div>
+
+            <div class="modal-error" id="modalError"></div>
+            <button class="btn-pagar" id="btnPagar" type="button">
+                <i class="fa-solid fa-lock"></i> Continuar para pagamento
+            </button>
+        </form>
+        <div class="lock-line"><i class="fa-solid fa-shield-halved"></i> Dados protegidos · SSL · MercadoPago</div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { firebaseConfig, brandConfig }  from './assets/js/config.js';
+
+document.getElementById('brandTitle').textContent = brandConfig.name;
+document.title = `Planos — ${brandConfig.name}`;
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const fns  = getFunctions(app, 'us-central1');
+
+(async () => {
+    try {
+        const snap = await getDoc(doc(db, 'configuracoes', 'planos'));
+        if (!snap.exists()) return;
+        const d = snap.data();
+        const fmt = v => 'R$' + Number(v).toLocaleString('pt-BR') + '<span>/mês</span>';
+        if (d.basico)       { document.getElementById('precoBasico').innerHTML = fmt(d.basico);       document.querySelector('[data-plano="basico"]').dataset.valor       = d.basico; }
+        if (d.profissional) { document.getElementById('precoPro').innerHTML    = fmt(d.profissional); document.querySelector('[data-plano="profissional"]').dataset.valor = d.profissional; }
+        if (d.empresarial)  { document.getElementById('precoEmp').innerHTML    = fmt(d.empresarial);  document.querySelector('[data-plano="empresarial"]').dataset.valor  = d.empresarial; }
+    } catch(_) {}
+})();
+
+let currentUser   = null;
+let currentEmpresa = null;
+let activePlan    = null;
+
+const authReady = new Promise(resolve => onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    if (user) {
+        try {
+            const profSnap = await getDoc(doc(db, 'usuarios', user.uid));
+            if (profSnap.exists()) {
+                const empSnap = await getDoc(doc(db, 'empresas', profSnap.data().empresaId));
+                if (empSnap.exists()) currentEmpresa = empSnap.data();
+            }
+        } catch(_) {}
+    }
+    resolve(user);
+}));
+
+function showErr(msg) {
+    const el = document.getElementById('modalError');
+    el.textContent = msg;
+    el.classList.add('show');
+}
+function resetBtn() {
+    document.getElementById('btnPagar').disabled = false;
+    document.getElementById('btnPagar').innerHTML = '<i class="fa-solid fa-lock"></i> Continuar para pagamento';
+}
+
+document.querySelectorAll('[data-plano]').forEach(planBtn => {
+    planBtn.addEventListener('click', async () => {
+        await authReady;
+
+        // Usuário já tem plano ativo → vai para meu-plano.html
+        if (currentUser && currentEmpresa?.planoAtivo && ['basico','profissional','empresarial'].includes(currentEmpresa?.plano)) {
+            window.location.href = 'meu-plano.html';
+            return;
+        }
+
+        activePlan = { key: planBtn.dataset.plano, nome: planBtn.dataset.nome, valor: planBtn.dataset.valor };
+        document.getElementById('modalPlanNome').textContent  = activePlan.nome;
+        document.getElementById('modalPlanPreco').textContent = `R$${activePlan.valor}`;
+        document.getElementById('modalError').classList.remove('show');
+
+        if (currentUser) {
+            document.getElementById('sectionConta').style.display = 'none';
+            document.getElementById('fieldEmail').style.display   = 'block';
+            document.getElementById('payerEmail').value           = currentUser.email || '';
+        } else {
+            document.getElementById('sectionConta').style.display = 'block';
+            document.getElementById('fieldEmail').style.display   = 'none';
+        }
+
+        resetBtn();
+        document.getElementById('modalOverlay').classList.add('open');
+    });
+});
+
+document.getElementById('btnPagar').addEventListener('click', async () => {
+    document.getElementById('modalError').classList.remove('show');
+    const btn = document.getElementById('btnPagar');
+
+    let payerEmail = '';
+
+    if (!currentUser) {
+        const nomeEmp = document.getElementById('nomeEmpresa').value.trim();
+        const email   = document.getElementById('signupEmail').value.trim();
+        const senha   = document.getElementById('signupSenha').value;
+        if (!nomeEmp) { showErr('Informe o nome da empresa.'); return; }
+        if (!email)   { showErr('Informe o e-mail.'); return; }
+        if (senha.length < 6) { showErr('A senha deve ter no mínimo 6 caracteres.'); return; }
+        payerEmail = email;
+    } else {
+        payerEmail = document.getElementById('payerEmail').value.trim();
+        if (!payerEmail) { showErr('Informe o e-mail para pagamento.'); return; }
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando…';
+
+    try {
+        if (!currentUser) {
+            const nomeEmp = document.getElementById('nomeEmpresa').value.trim();
+            const email   = document.getElementById('signupEmail').value.trim();
+            const senha   = document.getElementById('signupSenha').value;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando conta…';
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, senha);
+                currentUser = cred.user;
+                await setDoc(doc(db, 'empresas', currentUser.uid), {
+                    nome: nomeEmp, email, plano: 'gratuito', planoAtivo: false,
+                    criadoEm: serverTimestamp(), trialDias: brandConfig.trialDays || 7,
+                });
+                await setDoc(doc(db, 'usuarios', currentUser.uid), {
+                    email, nome: nomeEmp, perfil: 'admin',
+                    empresaId: currentUser.uid, criadoEm: serverTimestamp(),
+                });
+            } catch(authErr) {
+                if (authErr.code === 'auth/email-already-in-use') {
+                    const cred = await signInWithEmailAndPassword(auth, email, senha);
+                    currentUser = cred.user;
+                } else {
+                    throw authErr;
+                }
+            }
+        }
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando assinatura…';
+        const criarAssinatura = httpsCallable(fns, 'criarAssinatura');
+        const result = await criarAssinatura({ planKey: activePlan.key, payerEmail });
+
+        if (result.data?.initPoint) {
+            window.location.href = result.data.initPoint;
+        } else {
+            throw new Error('Não foi possível iniciar o pagamento. Tente novamente.');
+        }
+    } catch(err) {
+        console.error('Erro pagamento:', err);
+        showErr(err?.message || 'Erro inesperado. Tente novamente.');
+        resetBtn();
+    }
+});
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+</script>
+</body>
+</html>

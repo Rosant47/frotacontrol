@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Acesso</title>
+    <style>
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
+        .box { background: #fff; border-radius: 16px; padding: 40px; max-width: 400px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+        h2 { color: #1e293b; margin-bottom: 6px; font-size: 20px; }
+        p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+        label { font-size: 13px; color: #475569; font-weight: 600; display: block; margin-bottom: 4px; }
+        input { width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; margin-bottom: 14px; }
+        button { padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        .msg { margin-top: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+        .msg.ok  { background: #f0fdf4; color: #16a34a; display: block; }
+        .msg.err { background: #fef2f2; color: #dc2626; display: block; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>Recuperar Acesso</h2>
+    <p>Entre com seu e-mail e senha para recriar o perfil de administrador.</p>
+    <label>E-mail</label>
+    <input type="email" id="email" value="rbeto45@gmail.com">
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="Sua senha">
+    <button id="btn">Entrar e Recuperar</button>
+    <button id="btnReset" style="margin-top:8px;background:#fff;color:#2563eb;border:1.5px solid #2563eb;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%">Enviar e-mail de redefinição de senha</button>
+    <div class="msg" id="msg"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+    apiKey: "AIzaSyChncsYZ1jNTfhtDzLWdYAJJdGyxnUc8vg",
+    authDomain: "frota-empresa-a8202.firebaseapp.com",
+    projectId: "frota-empresa-a8202",
+    storageBucket: "frota-empresa-a8202.firebasestorage.app",
+    messagingSenderId: "23548544092",
+    appId: "1:23548544092:web:dda8bb4b0ee045e1109299"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+document.getElementById('btnReset').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const msg   = document.getElementById('msg');
+    const btnR  = document.getElementById('btnReset');
+    if (email !== 'rbeto45@gmail.com') { msg.className='msg err'; msg.textContent='Acesso restrito.'; return; }
+    btnR.disabled = true;
+    btnR.textContent = 'Enviando...';
+    try {
+        await sendPasswordResetEmail(auth, email);
+        msg.className = 'msg ok';
+        msg.textContent = 'E-mail enviado! Verifique sua caixa de entrada e redefina a senha.';
+    } catch(e) {
+        msg.className = 'msg err';
+        msg.textContent = 'Erro: ' + e.message;
+    }
+    btnR.disabled = false;
+    btnR.textContent = 'Enviar e-mail de redefinição de senha';
+});
+
+document.getElementById('btn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    const btn   = document.getElementById('btn');
+    const msg   = document.getElementById('msg');
+
+    if (!senha) { msg.className='msg err'; msg.textContent='Digite a senha.'; return; }
+    if (email !== 'rbeto45@gmail.com') { msg.className='msg err'; msg.textContent='Acesso restrito.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Aguarde...';
+    msg.className = 'msg';
+
+    try {
+        const cred = await signInWithEmailAndPassword(auth, email, senha);
+        await setDoc(doc(db, 'usuarios', cred.user.uid), {
+            nome: 'Roberto',
+            email: email,
+            perfil: 'superadmin',
+            ativo: true,
+            empresaId: 'SfpCqwsNnae7x2F6RG6l',
+            criadoEm: serverTimestamp()
+        });
+        msg.className = 'msg ok';
+        msg.textContent = 'Perfil criado! Redirecionando...';
+        setTimeout(() => window.location.href = 'index.html', 2000);
+    } catch(e) {
+        msg.className = 'msg err';
+        msg.textContent = e.code === 'auth/invalid-credential' ? 'Senha incorreta.' : e.message;
+        btn.disabled = false;
+        btn.textContent = 'Entrar e Recuperar';
+    }
+});
+</script>
+</body>
+</html>

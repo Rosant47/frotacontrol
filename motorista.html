@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Reportar KM — FrotaControl</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 16px}
+        .card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+        .logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+        .logo-icon{width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0}
+        .logo span{font-size:16px;font-weight:800;color:#1e293b}
+        .greeting{font-size:20px;font-weight:700;color:#0f172a;margin-bottom:4px}
+        .sub{font-size:13px;color:#64748b;margin-bottom:20px}
+        .info-box{background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:20px}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e2e8f0}
+        .info-row:last-child{border-bottom:none}
+        .info-label{font-size:12px;color:#64748b;font-weight:500}
+        .info-value{font-size:13px;color:#1e293b;font-weight:600}
+        .plate{background:#1e293b;color:#fff;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px}
+        label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+        .km-input{width:100%;padding:16px;font-size:28px;font-weight:700;text-align:center;border:2px solid #e2e8f0;border-radius:12px;outline:none;color:#1e293b;letter-spacing:2px}
+        .km-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+        .km-hint{font-size:12px;color:#94a3b8;text-align:center;margin-top:6px;margin-bottom:20px}
+        .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:8px}
+        .btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+        .btn-primary:hover{opacity:.9}
+        .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+        .btn-ghost{background:#f1f5f9;color:#64748b}
+        .btn-ghost:hover{background:#e2e8f0}
+        .center{text-align:center;padding:16px 0}
+        .icon-big{font-size:52px;margin-bottom:14px}
+        .err-msg{color:#dc2626;font-size:13px;text-align:center;margin-top:10px;display:none}
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon"><img src="/logo.jpg" style="width:52px;height:52px;object-fit:cover;display:block"></div>
+        <span>FrotaControl</span>
+    </div>
+    <div id="content"></div>
+</div>
+
+<script>
+const PROJECT = 'frota-empresa-a8202';
+const API_KEY = 'AIzaSyChncsYZ1jNTfhtDzLWdYAJJdGyxnUc8vg';
+const BASE    = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+
+const p   = new URLSearchParams(location.search);
+const uId = p.get('u');
+const tok = p.get('t');
+const vId = p.get('vid') || '';
+const el  = document.getElementById('content');
+
+function fmtKm(v) { return Number(v||0).toLocaleString('pt-BR') + ' km'; }
+function esc(s)   { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showError(msg) {
+    el.innerHTML = `<div class="center">
+        <div class="icon-big">❌</div>
+        <strong style="color:#1e293b;display:block;margin-bottom:6px">Link inválido</strong>
+        <p style="font-size:13px;color:#64748b">${msg}</p>
+    </div>`;
+}
+
+if (!uId || !tok) { showError('Link incompleto. Solicite um novo link ao administrador.'); }
+else {
+    const nome  = p.get('n')   || 'Motorista';
+    const placa = p.get('p')   || '—';
+    const desc  = p.get('dc')  || '—';
+    const saida = p.get('s')   || '—';
+    const dest  = p.get('dst') || '—';
+    const kmIni = parseInt(p.get('ki')) || 0;
+    const kmCur = parseInt(p.get('kf')) || kmIni;
+
+    el.innerHTML = `
+        <div class="greeting">Olá, ${esc(nome)}!</div>
+        <p class="sub">Informe o KM atual do veículo abaixo.</p>
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">Veículo</span>
+                <span class="plate">${esc(placa)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Modelo</span>
+                <span class="info-value">${esc(desc)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Saída</span>
+                <span class="info-value">${esc(saida)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Destino</span>
+                <span class="info-value">${esc(dest)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">KM na saída</span>
+                <span class="info-value">${fmtKm(kmIni)}</span>
+            </div>
+        </div>
+        <label for="kmInput">KM atual do odômetro</label>
+        <input id="kmInput" class="km-input" type="number" inputmode="numeric"
+               min="${kmIni}" placeholder="${kmCur}" value="${kmCur}">
+        <p class="km-hint">KM mínimo: ${fmtKm(kmIni)}</p>
+        <button id="btnEnviar" class="btn btn-primary">Enviar KM</button>
+        <p id="errMsg" class="err-msg"></p>
+    `;
+
+    document.getElementById('btnEnviar').addEventListener('click', async () => {
+        const btn    = document.getElementById('btnEnviar');
+        const errMsg = document.getElementById('errMsg');
+        const km     = parseInt(document.getElementById('kmInput').value);
+
+        errMsg.style.display = 'none';
+        if (isNaN(km) || km < kmIni) {
+            errMsg.textContent = `KM inválido. Mínimo: ${fmtKm(kmIni)}.`;
+            errMsg.style.display = 'block';
+            return;
+        }
+
+        btn.disabled    = true;
+        btn.textContent = 'Enviando...';
+
+        try {
+            const url = `${BASE}/utilizacoes/${uId}`
+                + `?updateMask.fieldPaths=kmFinal&updateMask.fieldPaths=kmReportadoEm&key=${API_KEY}`;
+            const r = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: {
+                    kmFinal:       { integerValue: String(km) },
+                    kmReportadoEm: { stringValue:  new Date().toISOString() }
+                }})
+            });
+            const json = await r.json();
+            if (!r.ok) throw new Error(json?.error?.message || 'Erro ' + r.status);
+
+            // Atualiza KM do veículo se ID disponível
+            if (vId) {
+                const urlV = `${BASE}/veiculos/${vId}`
+                    + `?updateMask.fieldPaths=quilometragem&key=${API_KEY}`;
+                await fetch(urlV, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { quilometragem: { integerValue: String(km) } }})
+                }).catch(() => {});
+            }
+
+            el.innerHTML = `<div class="center">
+                <div class="icon-big">✅</div>
+                <strong style="color:#1e293b;font-size:20px;display:block;margin-bottom:8px">KM enviado!</strong>
+                <p style="font-size:14px;color:#64748b;margin-bottom:20px">
+                    O KM <strong>${fmtKm(km)}</strong> foi registrado com sucesso.
+                </p>
+                <button class="btn btn-ghost" onclick="window.close()">Fechar esta aba</button>
+            </div>`;
+        } catch(e) {
+            btn.disabled    = false;
+            btn.textContent = 'Enviar KM';
+            errMsg.textContent = 'Erro: ' + e.message;
+            errMsg.style.display = 'block';
+        }
+    });
+}
+</script>
+</body>
+</html>

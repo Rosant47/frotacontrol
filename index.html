@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrotaControl</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <!-- Preconnect para reduzir latência nas CDNs -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script>if(localStorage.getItem('frotaDark')==='1')document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FrotaControl">
+    <link rel="apple-touch-icon" href="logo.jpg">
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" id="sidebarLogoIcon"><img src="/logo.jpg" style="width:54px;height:54px;object-fit:cover;border-radius:10px;display:block"></div>
+        <div class="sidebar-logo-text">
+            <h2 id="brandName">FrotaControl</h2>
+            <p id="brandTagline">Gestão de Frota</p>
+        </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+        <div class="nav-section-title">Principal</div>
+        <a class="nav-item" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <div class="nav-section-title">Cadastros</div>
+        <a class="nav-item" data-page="vehicles"><i class="fa-solid fa-car"></i> Veículos</a>
+        <a class="nav-item" data-page="drivers"><i class="fa-solid fa-id-card"></i> Motoristas</a>
+        <div class="nav-section-title">Controle</div>
+        <a class="nav-item" data-page="usage"><i class="fa-solid fa-road"></i> Utilização Diária</a>
+        <a class="nav-item" data-page="fines"><i class="fa-solid fa-triangle-exclamation"></i> Multas</a>
+        <a class="nav-item" data-page="infracoes"><i class="fa-solid fa-book-open"></i> Infrações CTB</a>
+        <a class="nav-item" data-page="map"><i class="fa-solid fa-map-location-dot"></i> Rastreamento</a>
+        <a class="nav-item" data-page="rodizio"><i class="fa-solid fa-rotate"></i> Rodízio</a>
+        <a class="nav-item" data-page="licenciamento"><i class="fa-solid fa-file-certificate"></i> Licenciamento</a>
+        <a class="nav-item" data-page="fuel"><i class="fa-solid fa-gas-pump"></i> Combustível</a>
+        <a class="nav-item" data-page="manutencao"><i class="fa-solid fa-wrench"></i> Manutenção</a>
+        <div class="nav-section-title">Análise</div>
+        <a class="nav-item" data-page="reports"><i class="fa-solid fa-chart-bar"></i> Relatórios</a>
+        <div class="nav-section-title admin-nav" style="display:none">Administração</div>
+        <a class="nav-item admin-nav" data-page="users" style="display:none"><i class="fa-solid fa-users-gear"></i> Usuários</a>
+        <a class="nav-item admin-nav" data-page="empresa" style="display:none"><i class="fa-solid fa-building"></i> Minha Empresa</a>
+        <a class="nav-item superadmin-nav" href="admin-planos.html" style="display:none"><i class="fa-solid fa-crown"></i> Painel Superadmin</a>
+        <div class="nav-section-title">Suporte</div>
+        <a class="nav-item" data-page="ajuda"><i class="fa-solid fa-circle-question"></i> Ajuda</a>
+    </nav>
+    <div id="planWidget" style="display:none;margin:0 12px 8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);cursor:pointer" onclick="window.location.href='planos.html'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span id="planWidgetNome" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px"></span>
+            <span id="planWidgetStatus" style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+            <i class="fa-solid fa-calendar-days" style="font-size:11px;color:rgba(255,255,255,.4)"></i>
+            <span id="planWidgetDias" style="font-size:12px;color:rgba(255,255,255,.7)"></span>
+        </div>
+    </div>
+    <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+        <div class="sidebar-user-info">
+            <strong id="sidebarUserName">—</strong>
+            <span id="sidebarUserRole">—</span>
+        </div>
+        <a href="#" class="sidebar-logout" id="logoutBtn" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main-wrapper" id="mainWrapper">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+            <nav class="breadcrumb">
+                <i class="fa-solid fa-house" style="color:var(--muted);font-size:12px"></i>
+                <span class="bc-sep">/</span>
+                <span class="bc-current" id="bcCurrent">Dashboard</span>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="header-user">
+                <div class="header-avatar" id="headerAvatar">A</div>
+                <div class="header-user-info">
+                    <strong id="headerUserName">—</strong>
+                    <span id="headerUserRole">—</span>
+                </div>
+            </div>
+            <button id="darkToggle" title="Modo escuro"><i class="fa-solid fa-moon"></i></button>
+            <a href="#" class="header-logout" id="headerLogout">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair
+            </a>
+        </div>
+    </header>
+
+    <!-- Safety banner -->
+    <div id="safetyBanner" style="display:none"></div>
+
+    <!-- Loading screen -->
+    <div class="page-content" id="loadingScreen" style="display:flex;align-items:center;justify-content:center;flex:1">
+        <div style="text-align:center;color:var(--muted)">
+            <div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
+            <p>Carregando sistema...</p>
+            <div id="loadTimeout" style="display:none;margin-top:20px">
+                <p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Está demorando muito?</p>
+                <button onclick="limparCacheRecarregar()" style="padding:9px 20px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">
+                    &#8635; Recarregar e limpar cache
+                </button>
+            </div>
+        </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+    <!-- Page content -->
+    <div class="page-content" id="pageContent" style="display:none"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+// Mostra botão de recovery se o app não abrir em 12s
+setTimeout(function() {
+    var ls = document.getElementById('loadingScreen');
+    var lt = document.getElementById('loadTimeout');
+    if (ls && lt && ls.style.display !== 'none') lt.style.display = 'block';
+}, 12000);
+
+function limparCacheRecarregar() {
+    var btn = document.querySelector('#loadTimeout button');
+    if (btn) { btn.textContent = 'Limpando...'; btn.disabled = true; }
+    var work = [];
+    if ('serviceWorker' in navigator) {
+        work.push(navigator.serviceWorker.getRegistrations()
+            .then(function(rs) { return Promise.all(rs.map(function(r) { return r.unregister(); })); }));
+    }
+    if ('caches' in window) {
+        work.push(caches.keys().then(function(ks) { return Promise.all(ks.map(function(k) { return caches.delete(k); })); }));
+    }
+    Promise.all(work).then(function() { location.reload(true); }).catch(function() { location.reload(); });
+}
+</script>
+<script type="module" src="assets/js/app.js"></script>
+
+<!-- Bottom Navigation (mobile) -->
+<nav class="bottom-nav" id="bottomNav">
+    <a class="bn-item" data-page="dashboard" id="bn-dashboard">
+        <i class="fa-solid fa-house"></i><span>Início</span>
+    </a>
+    <a class="bn-item" data-page="vehicles" id="bn-vehicles">
+        <i class="fa-solid fa-car"></i><span>Veículos</span>
+    </a>
+    <a class="bn-item" data-page="usage" id="bn-usage">
+        <i class="fa-solid fa-road"></i><span>Uso</span>
+    </a>
+    <a class="bn-item" data-page="map" id="bn-map">
+        <i class="fa-solid fa-map-location-dot"></i><span>Mapa</span>
+    </a>
+    <button class="bn-item" id="bn-more">
+        <i class="fa-solid fa-grid-2"></i><span>Mais</span>
+    </button>
+</nav>
+
+<!-- Bottom Sheet overlay -->
+<div class="bn-sheet-overlay" id="bnSheetOverlay"></div>
+
+<!-- Bottom Sheet -->
+<div class="bn-sheet" id="bnSheet">
+    <div class="bn-sheet-handle"></div>
+    <div class="bn-sheet-title">Menu</div>
+    <div class="bn-sheet-grid">
+        <button class="bn-sheet-item" data-page="drivers">
+            <div class="bsi-icon" style="background:#faf5ff;color:#7c3aed"><i class="fa-solid fa-id-card"></i></div>
+            <span>Motoristas</span>
+        </button>
+        <button class="bn-sheet-item" data-page="fines">
+            <div class="bsi-icon" style="background:#fef2f2;color:#dc2626"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <span>Multas</span>
+        </button>
+        <button class="bn-sheet-item" data-page="infracoes">
+            <div class="bsi-icon" style="background:#eff6ff;color:#2563eb"><i class="fa-solid fa-book-open"></i></div>
+            <span>Infrações CTB</span>
+        </button>
+        <button class="bn-sheet-item" data-page="rodizio">
+            <div class="bsi-icon" style="background:#fff7ed;color:#ea580c"><i class="fa-solid fa-rotate"></i></div>
+            <span>Rodízio</span>
+        </button>
+        <button class="bn-sheet-item" data-page="licenciamento">
+            <div class="bsi-icon" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-file-certificate"></i></div>
+            <span>Licenciamento</span>
+        </button>
+        <button class="bn-sheet-item" data-page="fuel">
+            <div class="bsi-icon" style="background:#f0fdf4;color:#16a34a"><i class="fa-solid fa-gas-pump"></i></div>
+            <span>Combustível</span>
+        </button>
+        <button class="bn-sheet-item" data-page="manutencao">
+            <div class="bsi-icon" style="background:#f0fdfa;color:#0d9488"><i class="fa-solid fa-wrench"></i></div>
+            <span>Manutenção</span>
+        </button>
+        <button class="bn-sheet-item" data-page="reports">
+            <div class="bsi-icon" style="background:#eef2ff;color:#4f46e5"><i class="fa-solid fa-chart-bar"></i></div>
+            <span>Relatórios</span>
+        </button>
+        <button class="bn-sheet-item admin-nav" data-page="users" style="display:none">
+            <div class="bsi-icon" style="background:#f1f5f9;color:#475569"><i class="fa-solid fa-users-gear"></i></div>
+            <span>Usuários</span>
+        </button>
+        <button class="bn-sheet-item admin-nav" data-page="empresa" style="display:none">
+            <div class="bsi-icon" style="background:#f0fdfa;color:#0f766e"><i class="fa-solid fa-building"></i></div>
+            <span>Empresa</span>
+        </button>
+        <button class="bn-sheet-item" data-page="ajuda">
+            <div class="bsi-icon" style="background:#f0f9ff;color:#0284c7"><i class="fa-solid fa-circle-question"></i></div>
+            <span>Ajuda</span>
+        </button>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<!-- FAB -->
+<button id="fabBtn" title="Novo"><i class="fa-solid fa-plus"></i></button>
+
+<!-- PWA Install Banner -->
+<div id="pwaInstallBanner">
+    <div class="pwa-icon"><img src="/logo.jpg" style="width:40px;height:40px;object-fit:cover;border-radius:8px;display:block"></div>
+    <div class="pwa-text">
+        <strong>Instalar FrotaControl</strong>
+        <span>Acesso rápido direto da tela inicial</span>
+    </div>
+    <button id="pwaInstallBtn">Instalar</button>
+    <button id="pwaDismissBtn" title="Fechar">×</button>
+</div>
+
+<!-- Indicador GPS oculto — pontinho pulsante no canto -->
+<style>
+@keyframes gpsPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+@keyframes gpsAcquire{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+<div id="gpsIndicator" title="GPS ativo" style="display:none;position:fixed;bottom:18px;right:18px;
+     z-index:900;width:12px;height:12px;border-radius:50%;background:#22c55e;
+     animation:gpsPulse 2s infinite;cursor:default"></div>
+
+<!-- Indicador offline -->
+<div id="offlineBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+     background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 16px;font-size:13px;
+     font-family:-apple-system,sans-serif;border-top:2px solid #f59e0b">
+  <i class="fa-solid fa-wifi-slash" style="color:#f59e0b;margin-right:6px"></i>
+  Você está offline — os dados salvos continuam disponíveis e serão sincronizados ao voltar a conexão.
+</div>
+<script>
+  function updateOffline(){ document.getElementById('offlineBanner').style.display = navigator.onLine ? 'none' : 'block'; }
+  window.addEventListener('online',  updateOffline);
+  window.addEventListener('offline', updateOffline);
+  updateOffline();
+</script>
+</body>
+</html>

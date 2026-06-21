@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Gestão de Planos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh}
+        header{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:12px}
+        header h1{font-size:18px;font-weight:700}
+        header p{font-size:12px;opacity:.7;margin-top:2px}
+        .container{max-width:1100px;margin:0 auto;padding:24px 16px}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+        .stat{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+        .stat-val{font-size:26px;font-weight:800;color:#1e293b}
+        .stat-lbl{font-size:12px;color:#64748b;margin-top:2px}
+        .stat-mrr .stat-val{color:#16a34a;font-size:20px}
+        .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:20px}
+        .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+        .card-header h2{font-size:15px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;margin:0}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{text-align:left;padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #f1f5f9}
+        td{padding:10px 12px;border-bottom:1px solid #f8fafc;color:#374151;vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:#fafafa}
+        .row-expiring td{background:#fefce8!important}
+        .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+        .badge-trial{background:#fef3c7;color:#d97706}
+        .badge-ativo{background:#dcfce7;color:#16a34a}
+        .badge-expirado{background:#fee2e2;color:#dc2626}
+        .badge-cancelado{background:#f1f5f9;color:#64748b}
+        .badge-pendente{background:#ede9fe;color:#7c3aed}
+        .pending-banner{background:#7c3aed;color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none}
+        .pending-banner h3{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+        .pending-item{background:rgba(255,255,255,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+        .pending-item:last-child{margin-bottom:0}
+        .pending-item .info{font-size:13px}
+        .pending-item .info strong{display:block}
+        .pending-item .info span{font-size:11px;opacity:.8}
+        .btn-sm{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:opacity .15s}
+        .btn-sm:hover{opacity:.8}
+        .btn-ativar{background:#2563eb;color:#fff}
+        .btn-wpp{background:#25d366;color:#fff}
+        .btn-csv{background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0}
+        select{padding:4px 8px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;color:#374151;background:#fff;cursor:pointer;font-family:inherit}
+        .search{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#1e293b;margin-bottom:16px;font-family:inherit}
+        .search:focus{outline:none;border-color:#2563eb}
+        .filter-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+        .filter-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s}
+        .filter-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+        .empty{text-align:center;padding:40px;color:#94a3b8;font-size:14px}
+        #loadMsg{text-align:center;padding:60px;color:#64748b;font-size:14px}
+        #authWall{display:none;text-align:center;padding:80px 20px}
+        #authWall h2{font-size:20px;color:#dc2626;margin-bottom:8px}
+        #authWall p{font-size:14px;color:#64748b}
+        .dias-badge{font-size:11px;color:#94a3b8;margin-left:4px}
+        @media(max-width:700px){
+            .hide-mob{display:none}
+            .stats{grid-template-columns:1fr 1fr}
+            .pending-item{flex-direction:column;align-items:flex-start}
+            th,td{padding:8px 8px}
+            .btn-sm{padding:6px 10px;min-height:36px}
+        }
+        @media(max-width:480px){
+            header{padding:14px 16px;flex-wrap:wrap;gap:8px}
+            .container{padding:16px 12px}
+            .stats{grid-template-columns:1fr 1fr;gap:10px}
+            .stat{padding:12px 14px}
+            .stat-val{font-size:22px}
+            .card{padding:14px}
+            .search{padding:9px 12px}
+            select{padding:8px}
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1><i class="fa-solid fa-crown"></i> Gestão de Planos</h1>
+        <p>Painel administrativo — acesso restrito</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+        <a href="admin-logs.html" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none">
+            <i class="fa-solid fa-clock-rotate-left"></i> Logs
+        </a>
+        <a href="index.html" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none">
+            <i class="fa-solid fa-arrow-left"></i> Sistema
+        </a>
+        <button id="logoutBtn" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
+    </div>
+</header>
+
+<div class="container">
+    <div id="authWall">
+        <h2><i class="fa-solid fa-lock"></i> Acesso negado</h2>
+        <p>Esta página é restrita ao administrador da plataforma.</p>
+        <a href="index.html" style="display:inline-block;margin-top:16px;color:#2563eb;text-decoration:none;font-size:13px">← Voltar ao sistema</a>
+    </div>
+
+    <div id="mainContent" style="display:none">
+
+        <!-- Banner de novos cadastros -->
+        <div id="newBanner" style="display:none;background:#0f766e;color:#fff;border-radius:12px;padding:14px 20px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px">
+                <i class="fa-solid fa-user-plus" style="font-size:18px"></i>
+                <div>
+                    <div style="font-size:14px;font-weight:700" id="newBannerTitle">—</div>
+                    <div style="font-size:12px;opacity:.8" id="newBannerSub">—</div>
+                </div>
+            </div>
+            <button id="newBannerDismiss" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">
+                Marcar como visto
+            </button>
+        </div>
+
+        <!-- Banner de pendentes -->
+        <div class="pending-banner" id="pendingBanner">
+            <h3><i class="fa-solid fa-bell fa-shake"></i> Pagamentos aguardando ativação</h3>
+            <div id="pendingList"></div>
+        </div>
+
+        <!-- Card de preços dos planos -->
+        <div class="card" style="border:2px solid rgba(37,99,235,.15)">
+            <h2 style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                <i class="fa-solid fa-tags" style="color:#2563eb"></i> Preços dos Planos
+            </h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px">
+                <div>
+                    <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Básico</label>
+                    <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:9px;overflow:hidden">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:13px;color:#64748b;border-right:1px solid #e2e8f0">R$</span>
+                        <input id="precoBasico" type="number" step="0.01" min="0" style="flex:1;padding:8px 10px;border:none;outline:none;font-size:14px;font-weight:600;font-family:inherit;width:0" placeholder="79.00">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:11px;color:#94a3b8;border-left:1px solid #e2e8f0">/mês</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profissional</label>
+                    <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:9px;overflow:hidden">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:13px;color:#64748b;border-right:1px solid #e2e8f0">R$</span>
+                        <input id="precoPro" type="number" step="0.01" min="0" style="flex:1;padding:8px 10px;border:none;outline:none;font-size:14px;font-weight:600;font-family:inherit;width:0" placeholder="149.00">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:11px;color:#94a3b8;border-left:1px solid #e2e8f0">/mês</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Empresarial</label>
+                    <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:9px;overflow:hidden">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:13px;color:#64748b;border-right:1px solid #e2e8f0">R$</span>
+                        <input id="precoEmp" type="number" step="0.01" min="0" style="flex:1;padding:8px 10px;border:none;outline:none;font-size:14px;font-weight:600;font-family:inherit;width:0" placeholder="299.00">
+                        <span style="padding:8px 10px;background:#f8fafc;font-size:11px;color:#94a3b8;border-left:1px solid #e2e8f0">/mês</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <button id="btnSalvarPrecos" class="btn-sm btn-ativar" style="padding:8px 20px;font-size:13px">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar preços
+                </button>
+                <span id="precosSavedMsg" style="font-size:12px;color:#16a34a;display:none">
+                    <i class="fa-solid fa-circle-check"></i> Salvo com sucesso!
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-lbl">Empresas cadastradas</div></div>
+            <div class="stat"><div class="stat-val" id="statAtivo">—</div><div class="stat-lbl">Contas ativas</div></div>
+            <div class="stat"><div class="stat-val" id="statTrial">—</div><div class="stat-lbl">Em trial</div></div>
+            <div class="stat"><div class="stat-val" id="statExpirado">—</div><div class="stat-lbl">Trial expirado</div></div>
+            <div class="stat stat-mrr"><div class="stat-val" id="statMRR">—</div><div class="stat-lbl">Receita est. /mês</div></div>
+        </div>
+
+        <!-- Tabela de empresas -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-building"></i> Todas as empresas</h2>
+                <button id="btnCsv" class="btn-sm btn-csv">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </button>
+            </div>
+            <div class="filter-btns" id="filterBtns">
+                <button class="filter-btn active" data-filter="todos">Todos</button>
+                <button class="filter-btn" data-filter="ativo">Ativos</button>
+                <button class="filter-btn" data-filter="trial">Trial</button>
+                <button class="filter-btn" data-filter="expirado">Expirados</button>
+                <button class="filter-btn" data-filter="pendente">Pendentes</button>
+                <button class="filter-btn" data-filter="cancelado">Cancelados</button>
+            </div>
+            <input class="search" type="search" id="searchInput" placeholder="Buscar por nome, e-mail ou ID...">
+            <div id="tableWrap">
+                <div id="loadMsg"><i class="fa-solid fa-spinner fa-spin"></i> Carregando...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de ativação -->
+<div id="activateModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto">
+        <h3 style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:16px">Ativar / Alterar Plano</h3>
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px">Empresa: <strong id="modEmpNome"></strong></p>
+
+        <div style="margin-bottom:14px">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:6px">PLANO</label>
+            <select id="modPlano" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-family:inherit">
+                <option value="gratuito">Trial / Gratuito</option>
+                <option value="trial">Trial (legado)</option>
+                <option value="basico">Básico — R$79/mês</option>
+                <option value="profissional">Profissional — R$149/mês</option>
+                <option value="empresarial">Empresarial — R$299/mês</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+        </div>
+
+        <!-- Extensão de trial -->
+        <div id="trialExtBlock" style="display:none;margin-bottom:14px;padding:10px 12px;background:#fefce8;border:1.5px solid #fde047;border-radius:9px">
+            <p style="font-size:11px;font-weight:700;color:#854d0e;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">
+                <i class="fa-solid fa-hourglass-half"></i> Expira em: <span id="trialExpiraLabel">—</span>
+            </p>
+            <div style="display:flex;gap:8px">
+                <button id="btn7d"  class="btn-sm" style="flex:1;justify-content:center;background:#fff;color:#854d0e;border:1.5px solid #fde047">+7 dias</button>
+                <button id="btn30d" class="btn-sm" style="flex:1;justify-content:center;background:#854d0e;color:#fff;border:none">+30 dias</button>
+            </div>
+        </div>
+
+        <div id="modUsuarios" style="max-height:180px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:9px"></div>
+
+        <label style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;background:#fefce8;border:1.5px solid #fde047;border-radius:9px;cursor:pointer">
+            <input type="checkbox" id="modPrincipal" style="width:16px;height:16px;cursor:pointer;accent-color:#ca8a04">
+            <span style="font-size:13px;font-weight:600;color:#854d0e"><i class="fa-solid fa-shield-halved"></i> Proteger empresa (impede exclusão)</span>
+        </label>
+
+        <div style="display:flex;gap:10px;margin-top:14px">
+            <button id="modCancelar" style="flex:1;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+            <button id="modSalvar"   style="flex:1;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+                <i class="fa-solid fa-check"></i> Salvar
+            </button>
+        </div>
+        <button id="modRemover" style="width:100%;margin-top:8px;padding:10px;background:#fee2e2;color:#dc2626;border:1.5px solid #fecaca;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+            <i class="fa-solid fa-trash"></i> Remover empresa permanentemente
+        </button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, where, serverTimestamp, Timestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+document.title = `Admin — ${brandConfig.name}`;
+
+const SUPERADMIN_EMAIL = brandConfig.superadminEmail || 'rbeto45@gmail.com';
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => window.location.href = 'login.html');
+});
+
+let allEmpresas    = [];
+let currentEmpId   = null;
+let usersByEmpresa = {};
+let currentFilter  = 'todos';
+let precos = { basico: 79, profissional: 149, empresarial: 299 };
+let newEmpresaIds  = new Set();
+
+onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const profSnap = await getDoc(doc(db, 'usuarios', user.uid)).catch(() => null);
+    const isSuperAdmin = user.email === SUPERADMIN_EMAIL
+        || profSnap?.data()?.perfil === 'superadmin';
+
+    if (!isSuperAdmin) {
+        document.getElementById('authWall').style.display = 'block';
+        document.getElementById('authWall').innerHTML += `<p style="margin-top:12px;font-size:12px;color:#64748b">Email: <b>${user.email}</b> | Perfil: <b>${profSnap?.data()?.perfil || 'não encontrado'}</b></p>`;
+        return;
+    }
+
+    document.getElementById('mainContent').style.display = 'block';
+    await Promise.all([loadEmpresas(), loadPrecos()]);
+    document.getElementById('btnSalvarPrecos').addEventListener('click', savePrecos);
+    document.getElementById('btnCsv').addEventListener('click', exportCsv);
+});
+
+// ─── Preços ───────────────────────────────────────────────────────────────────
+
+async function loadPrecos() {
+    try {
+        const snap = await getDoc(doc(db, 'configuracoes', 'planos'));
+        const d = snap.exists() ? snap.data() : {};
+        precos.basico       = d.basico       ?? 79;
+        precos.profissional = d.profissional ?? 149;
+        precos.empresarial  = d.empresarial  ?? 299;
+        document.getElementById('precoBasico').value = precos.basico;
+        document.getElementById('precoPro').value    = precos.profissional;
+        document.getElementById('precoEmp').value    = precos.empresarial;
+        updatePlanoOptions();
+        renderStats();
+    } catch(_) {}
+}
+
+async function savePrecos() {
+    const btn = document.getElementById('btnSalvarPrecos');
+    const msg = document.getElementById('precosSavedMsg');
+    const b = parseFloat(document.getElementById('precoBasico').value);
+    const p = parseFloat(document.getElementById('precoPro').value);
+    const e = parseFloat(document.getElementById('precoEmp').value);
+    if ([b, p, e].some(isNaN)) { alert('Preencha todos os preços corretamente.'); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        await setDoc(doc(db, 'configuracoes', 'planos'), { basico: b, profissional: p, empresarial: e, atualizadoEm: serverTimestamp() });
+        precos = { basico: b, profissional: p, empresarial: e };
+        updatePlanoOptions();
+        renderStats();
+        msg.style.display = '';
+        setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } catch(err) {
+        alert('Erro ao salvar: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar preços';
+    }
+}
+
+function fmtR(v) { return 'R$' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '/mês'; }
+
+function updatePlanoOptions() {
+    document.querySelector('#modPlano option[value="basico"]').textContent       = `Básico — ${fmtR(precos.basico)}`;
+    document.querySelector('#modPlano option[value="profissional"]').textContent = `Profissional — ${fmtR(precos.profissional)}`;
+    document.querySelector('#modPlano option[value="empresarial"]').textContent  = `Empresarial — ${fmtR(precos.empresarial)}`;
+}
+
+// ─── Empresas ─────────────────────────────────────────────────────────────────
+
+async function loadEmpresas() {
+    const [empSnap, usrSnap] = await Promise.all([
+        getDocs(collection(db, 'empresas')),
+        getDocs(collection(db, 'usuarios')),
+    ]);
+
+    const admins = {};
+    usersByEmpresa = {};
+    usrSnap.docs.forEach(d => {
+        const u = d.data();
+        if (!u.empresaId) return;
+        if (u.perfil === 'admin') {
+            admins[u.empresaId] = { nome: u.nome, email: u.email, telefone: u.telefone || '' };
+        }
+        if (!usersByEmpresa[u.empresaId]) usersByEmpresa[u.empresaId] = [];
+        usersByEmpresa[u.empresaId].push({
+            nome:       u.nome      || '—',
+            email:      u.email     || '—',
+            perfil:     u.perfil    || '—',
+            ativo:      u.ativo,
+            lastLogin:  u.lastLogin || null,
+            acessosDia: u.acessosDia || {},
+        });
+    });
+
+    // Calcula último acesso e acessos hoje por empresa
+    const hoje = new Date().toISOString().slice(0, 10);
+    const ultimoAcessoMap = {};
+    const acessosHojeMap  = {};
+    Object.entries(usersByEmpresa).forEach(([empId, users]) => {
+        users.forEach(u => {
+            const t = u.lastLogin?.toDate ? u.lastLogin.toDate() : null;
+            if (t && (!ultimoAcessoMap[empId] || t > ultimoAcessoMap[empId])) {
+                ultimoAcessoMap[empId] = t;
+            }
+            acessosHojeMap[empId] = (acessosHojeMap[empId] || 0) + (u.acessosDia?.[hoje] || 0);
+        });
+    });
+
+    allEmpresas = empSnap.docs.map(d => ({
+        id: d.id, ...d.data(),
+        admin:        admins[d.id]          || {},
+        ultimoAcesso: ultimoAcessoMap[d.id] || null,
+        acessosHoje:  acessosHojeMap[d.id]  || 0,
+    }));
+    allEmpresas.sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+
+    renderStats();
+    renderPending();
+    renderNewBanner();
+    applyFilters();
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    document.getElementById('filterBtns').addEventListener('click', e => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+        applyFilters();
+    });
+}
+
+function renderNewBanner() {
+    const LS_KEY  = 'frotaadmin_lastChecked';
+    const lastRaw = localStorage.getItem(LS_KEY);
+    const last    = lastRaw ? new Date(lastRaw) : null;
+
+    newEmpresaIds = new Set();
+    if (last) {
+        allEmpresas.forEach(emp => {
+            const criado = emp.criadoEm?.toDate ? emp.criadoEm.toDate() : null;
+            if (criado && criado > last) newEmpresaIds.add(emp.id);
+        });
+    }
+
+    const banner = document.getElementById('newBanner');
+    if (!newEmpresaIds.size) { banner.style.display = 'none'; return; }
+
+    const qtd  = newEmpresaIds.size;
+    const when = last ? last.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+    document.getElementById('newBannerTitle').textContent = `${qtd} nova${qtd > 1 ? 's empresas' : ' empresa'} desde sua última visita`;
+    document.getElementById('newBannerSub').textContent   = when ? `Última visita: ${when}` : '';
+    banner.style.display = 'flex';
+
+    document.getElementById('newBannerDismiss').onclick = () => {
+        localStorage.setItem(LS_KEY, new Date().toISOString());
+        banner.style.display = 'none';
+        newEmpresaIds = new Set();
+        applyFilters();
+    };
+
+    // Marca a visita atual ao carregar (só atualiza se não há pendências novas)
+    if (!lastRaw) localStorage.setItem(LS_KEY, new Date().toISOString());
+}
+
+function applyFilters() {
+    const q   = document.getElementById('searchInput').value.toLowerCase();
+    const now = new Date();
+    const list = allEmpresas.filter(emp => {
+        if (q && !(
+            (emp.nome || '').toLowerCase().includes(q) ||
+            (emp.admin?.email || '').toLowerCase().includes(q) ||
+            emp.id.toLowerCase().includes(q)
+        )) return false;
+
+        const p = emp.plano || 'trial';
+        if (currentFilter === 'todos')    return true;
+        if (currentFilter === 'ativo')    return ['ativo','basico','profissional','empresarial'].includes(p);
+        if (currentFilter === 'pendente') return p === 'pendente';
+        if (currentFilter === 'cancelado') return p === 'cancelado';
+        if (currentFilter === 'trial') {
+            if (!['trial', 'gratuito'].includes(p)) return false;
+            const exp = emp.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+            return !exp || exp >= now;
+        }
+        if (currentFilter === 'expirado') {
+            if (!['trial', 'gratuito'].includes(p)) return false;
+            const exp = emp.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+            return !!exp && exp < now;
+        }
+        return true;
+    });
+    renderTable(list);
+}
+
+function renderPending() {
+    const pendentes = allEmpresas.filter(e => e.plano === 'pendente');
+    const banner    = document.getElementById('pendingBanner');
+    const list      = document.getElementById('pendingList');
+    if (!pendentes.length) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    list.innerHTML = pendentes.map(emp => `
+        <div class="pending-item">
+            <div class="info">
+                <strong>${emp.nome || '—'}</strong>
+                <span>${emp.admin?.email || ''} ${emp.pagamentoId ? '· Pag: ' + emp.pagamentoId : ''}</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${emp.admin?.telefone ? `<button class="btn-sm btn-wpp" onclick="contactAdmin('${emp.admin.telefone}','','${emp.nome?.replace(/'/g,"\\'")}')">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </button>` : ''}
+                <button class="btn-sm" style="background:#fff;color:#7c3aed;font-weight:700"
+                    onclick="openModal('${emp.id}','${emp.nome?.replace(/'/g,"\\'")}','pendente')">
+                    <i class="fa-solid fa-check"></i> Ativar agora
+                </button>
+            </div>
+        </div>`).join('');
+}
+
+function renderStats() {
+    const now = new Date();
+    let ativo = 0, trial = 0, expirado = 0, pendente = 0, mrr = 0;
+    allEmpresas.forEach(emp => {
+        const p = emp.plano || 'trial';
+        if (['ativo','basico','profissional','empresarial'].includes(p)) {
+            ativo++;
+            if (['basico','profissional','empresarial'].includes(p)) mrr += precos[p] || 0;
+            return;
+        }
+        if (p === 'pendente') { pendente++; return; }
+        if (['trial', 'gratuito'].includes(p)) {
+            const exp = emp.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+            if (exp && exp < now) { expirado++; } else { trial++; }
+        }
+    });
+    document.getElementById('statTotal').textContent    = allEmpresas.length;
+    document.getElementById('statAtivo').textContent    = ativo;
+    document.getElementById('statTrial').textContent    = trial + (pendente ? ` (+${pendente} pend.)` : '');
+    document.getElementById('statExpirado').textContent = expirado;
+    document.getElementById('statMRR').textContent      = 'R$' + mrr.toLocaleString('pt-BR', { minimumFractionDigits: 0 });
+}
+
+function planoLabel(emp) {
+    const p = emp.plano || 'trial';
+    if (['ativo','basico','profissional','empresarial'].includes(p)) {
+        const labels = { ativo:'Ativo', basico:'Básico', profissional:'Profissional', empresarial:'Empresarial' };
+        return `<span class="badge badge-ativo"><i class="fa-solid fa-circle-check"></i> ${labels[p] || p}</span>`;
+    }
+    if (p === 'pendente')  return `<span class="badge badge-pendente"><i class="fa-solid fa-clock"></i> Aguardando ativação</span>`;
+    if (p === 'cancelado') return `<span class="badge badge-cancelado">Cancelado</span>`;
+    const exp = emp.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+    if (exp) {
+        const dias = Math.ceil((exp - new Date()) / 86400000);
+        if (dias <= 0) return `<span class="badge badge-expirado"><i class="fa-solid fa-clock"></i> Trial expirado</span>`;
+        const warn = dias <= 3 ? ' style="color:#dc2626"' : '';
+        return `<span class="badge badge-trial"><i class="fa-solid fa-hourglass-half"></i> Trial</span><span class="dias-badge"${warn}>${dias}d restantes</span>`;
+    }
+    return `<span class="badge badge-trial">Trial</span>`;
+}
+
+function dateFmt(ts) {
+    if (!ts) return '—';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+}
+
+function timeFmt(date) {
+    if (!date) return '—';
+    const now  = new Date();
+    const diff = now - date;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)   return 'Agora há pouco';
+    if (mins < 60)  return `${mins}min atrás`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return `${hrs}h atrás`;
+    const dias = Math.floor(hrs / 24);
+    if (dias === 1) return 'Ontem';
+    if (dias < 7)   return `${dias} dias atrás`;
+    return date.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+}
+
+function acessoCell(emp) {
+    if (!emp.ultimoAcesso) return '<span style="font-size:12px;color:#cbd5e1">Nunca</span>';
+    const hoje = new Date().toISOString().slice(0, 10);
+    const acessouHoje = emp.ultimoAcesso.toISOString().slice(0, 10) === hoje;
+    const dot  = acessouHoje
+        ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-right:5px;vertical-align:middle" title="Acessou hoje"></span>'
+        : '';
+    const count = emp.acessosHoje > 0
+        ? `<span style="font-size:10px;color:#64748b;margin-left:4px">(${emp.acessosHoje}x hoje)</span>`
+        : '';
+    return `<div style="font-size:12px;color:#374151">${dot}${timeFmt(emp.ultimoAcesso)}${count}</div>`;
+}
+
+function renderTable(list) {
+    const wrap = document.getElementById('tableWrap');
+    if (!list.length) {
+        wrap.innerHTML = '<div class="empty">Nenhuma empresa encontrada.</div>';
+        return;
+    }
+    const now = new Date();
+    wrap.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+        <thead><tr>
+            <th>Empresa</th>
+            <th>Admin</th>
+            <th class="hide-mob">Cadastro</th>
+            <th class="hide-mob" style="text-align:center">Usuários</th>
+            <th class="hide-mob">Último acesso</th>
+            <th>Plano</th>
+            <th>Ações</th>
+        </tr></thead>
+        <tbody>
+        ${list.map(emp => {
+            const userCount = (usersByEmpresa[emp.id] || []).length;
+            const p   = emp.plano || 'trial';
+            const exp = emp.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+            const expiring = p === 'trial' && exp && Math.ceil((exp - now) / 86400000) <= 3 && exp >= now;
+            return `
+        <tr class="${expiring ? 'row-expiring' : ''}">
+            <td>
+                <div style="font-weight:600;color:#1e293b">${emp.nome || '—'} ${emp.principal ? '<i class="fa-solid fa-shield-halved" style="color:#ca8a04;font-size:12px" title="Empresa protegida"></i>' : ''} ${newEmpresaIds.has(emp.id) ? '<span style="font-size:10px;background:#0f766e;color:#fff;padding:2px 7px;border-radius:10px;font-weight:700;vertical-align:middle">NOVO</span>' : ''}</div>
+                <div style="font-size:11px;color:#94a3b8">${emp.id}</div>
+            </td>
+            <td>
+                <div style="font-size:13px">${emp.admin.nome || '—'}</div>
+                <div style="font-size:11px;color:#94a3b8">${emp.admin.email || ''}</div>
+            </td>
+            <td class="hide-mob" style="font-size:12px;color:#64748b">${dateFmt(emp.criadoEm)}</td>
+            <td class="hide-mob" style="text-align:center">
+                <span style="background:#f1f5f9;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600;color:#475569">${userCount}</span>
+            </td>
+            <td class="hide-mob">${acessoCell(emp)}</td>
+            <td>${planoLabel(emp)}</td>
+            <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn-sm btn-ativar" onclick="openModal('${emp.id}','${emp.nome?.replace(/'/g,"\\'")}','${emp.plano||'trial'}')">
+                        <i class="fa-solid fa-pen"></i> Plano
+                    </button>
+                    ${emp.admin.telefone || emp.admin.email ? `
+                    <button class="btn-sm btn-wpp" onclick="contactAdmin('${emp.admin.telefone || ''}','${emp.admin.email || ''}','${emp.nome?.replace(/'/g,"\\'")}')">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+        }).join('')}
+        </tbody>
+    </table>
+    </div>`;
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+
+function exportCsv() {
+    const rows = [['Empresa','ID','Admin Nome','Admin Email','Plano','Usuários','Cadastro']];
+    allEmpresas.forEach(emp => {
+        rows.push([
+            emp.nome || '',
+            emp.id,
+            emp.admin?.nome  || '',
+            emp.admin?.email || '',
+            emp.plano || 'trial',
+            (usersByEmpresa[emp.id] || []).length,
+            dateFmt(emp.criadoEm),
+        ]);
+    });
+    const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `empresas_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+
+window.openModal = (empId, nome, planoAtual) => {
+    currentEmpId = empId;
+    document.getElementById('modEmpNome').textContent = nome;
+    document.getElementById('modPlano').value = planoAtual || 'trial';
+
+    const emp = allEmpresas.find(e => e.id === empId);
+
+    // Trial extension block
+    const showTrial = (planoAtual || 'trial') === 'trial';
+    const trialBlock = document.getElementById('trialExtBlock');
+    trialBlock.style.display = showTrial ? '' : 'none';
+    if (showTrial) {
+        const exp = emp?.trialExpira?.toDate ? emp.trialExpira.toDate() : null;
+        document.getElementById('trialExpiraLabel').textContent = exp
+            ? exp.toLocaleDateString('pt-BR')
+            : 'sem data definida';
+    }
+    document.getElementById('modPlano').onchange = function() {
+        trialBlock.style.display = this.value === 'trial' ? '' : 'none';
+    };
+
+    // User cards
+    const users = usersByEmpresa[empId] || [];
+    const perfilLabel  = { admin:'Admin', superadmin:'Superadmin', gerente:'Gerente', condutor:'Condutor', visualizador:'Visualizador' };
+    const perfilColors = { admin:'#2563eb', superadmin:'#7c3aed', gerente:'#0d9488', condutor:'#ea580c', visualizador:'#64748b' };
+    const perfilBg     = { admin:'#eff6ff', superadmin:'#f5f3ff', gerente:'#f0fdfa', condutor:'#fff7ed', visualizador:'#f1f5f9' };
+    document.getElementById('modUsuarios').innerHTML = users.length
+        ? `<p style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px 0">${users.length} usuário(s)</p>
+           <div style="display:flex;flex-direction:column;gap:8px;padding:8px 10px 10px">
+           ${users.map(u => {
+               const cor   = perfilColors[u.perfil] || '#64748b';
+               const bg    = perfilBg[u.perfil]     || '#f1f5f9';
+               const label = perfilLabel[u.perfil]  || u.perfil;
+               return `<div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px">
+                   <div style="width:34px;height:34px;border-radius:50%;background:${cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${(u.nome||'?').charAt(0).toUpperCase()}</div>
+                   <div style="flex:1;min-width:0">
+                       <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.nome}</div>
+                       <div style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.email}</div>
+                       <div style="font-size:10px;color:#94a3b8;margin-top:1px">${u.lastLogin ? '⏱ ' + timeFmt(u.lastLogin.toDate ? u.lastLogin.toDate() : new Date(u.lastLogin)) : 'Nunca acessou'}</div>
+                   </div>
+                   <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:${bg};color:${cor};font-weight:600;white-space:nowrap">${label}</span>
+               </div>`;
+           }).join('')}
+           </div>`
+        : `<p style="padding:12px;font-size:12px;color:#94a3b8;text-align:center">Nenhum usuário cadastrado</p>`;
+
+    document.getElementById('modPrincipal').checked = emp?.principal === true;
+
+    const remBtn = document.getElementById('modRemover');
+    if (emp?.principal) {
+        remBtn.disabled = true;
+        remBtn.style.opacity = '0.4';
+        remBtn.title = 'Empresa protegida — desative a proteção para remover';
+    } else {
+        remBtn.disabled = false;
+        remBtn.style.opacity = '1';
+        remBtn.title = '';
+    }
+
+    document.getElementById('activateModal').style.display = 'flex';
+};
+
+// Extensão de trial
+async function extendTrial(days) {
+    if (!currentEmpId) return;
+    const emp = allEmpresas.find(e => e.id === currentEmpId);
+    const btn = document.getElementById(days === 7 ? 'btn7d' : 'btn30d');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        const base   = emp?.trialExpira?.toDate ? emp.trialExpira.toDate() : new Date();
+        const newExp = new Date(Math.max(base.getTime(), Date.now()));
+        newExp.setDate(newExp.getDate() + days);
+        const ts = Timestamp.fromDate(newExp);
+        await updateDoc(doc(db, 'empresas', currentEmpId), { trialExpira: ts });
+        if (emp) emp.trialExpira = ts;
+        document.getElementById('trialExpiraLabel').textContent = newExp.toLocaleDateString('pt-BR');
+        renderStats();
+        applyFilters();
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> +${days}d aplicado`;
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = `+${days} dias`; }, 2000);
+    } catch(err) {
+        alert('Erro: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = `+${days} dias`;
+    }
+}
+
+document.getElementById('btn7d').addEventListener('click',  () => extendTrial(7));
+document.getElementById('btn30d').addEventListener('click', () => extendTrial(30));
+
+window.contactAdmin = (tel, email, empNome) => {
+    const num = tel.replace(/\D/g,'');
+    const msg = `Olá! Sua conta no ${brandConfig.name} (${empNome}) está pronta para uso.`;
+    if (num) { window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`,'_blank'); }
+    else     { window.open(`mailto:${email}?subject=Conta+ativada+${encodeURIComponent(empNome)}&body=${encodeURIComponent(msg)}`); }
+};
+
+document.getElementById('modCancelar').addEventListener('click', () => {
+    document.getElementById('activateModal').style.display = 'none';
+});
+
+document.getElementById('modRemover').addEventListener('click', async () => {
+    const empNome = document.getElementById('modEmpNome').textContent;
+    if (!confirm(`⚠️ Remover permanentemente a empresa "${empNome}"?\n\nTodos os usuários desta empresa serão removidos. Esta ação não pode ser desfeita.`)) return;
+
+    const btn = document.getElementById('modRemover');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Removendo...';
+
+    try {
+        const usersSnap = await getDocs(query(collection(db, 'usuarios'), where('empresaId', '==', currentEmpId)));
+        for (const u of usersSnap.docs) await deleteDoc(u.ref);
+        await deleteDoc(doc(db, 'empresas', currentEmpId));
+
+        allEmpresas = allEmpresas.filter(e => e.id !== currentEmpId);
+        renderStats();
+        applyFilters();
+        document.getElementById('activateModal').style.display = 'none';
+    } catch(e) {
+        alert('Erro ao remover: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-trash"></i> Remover empresa permanentemente';
+    }
+});
+
+document.getElementById('modSalvar').addEventListener('click', async () => {
+    if (!currentEmpId) return;
+    const plano = document.getElementById('modPlano').value;
+    const btn   = document.getElementById('modSalvar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        const principal = document.getElementById('modPrincipal').checked;
+        await updateDoc(doc(db, 'empresas', currentEmpId), {
+            plano,
+            principal,
+            planoAtualizadoEm: serverTimestamp(),
+        });
+        const emp = allEmpresas.find(e => e.id === currentEmpId);
+        if (emp) { emp.plano = plano; emp.principal = principal; }
+        renderStats();
+        applyFilters();
+        document.getElementById('activateModal').style.display = 'none';
+    } catch(e) {
+        alert('Erro ao salvar: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
+    }
+});
+</script>
+</body>
+</html>

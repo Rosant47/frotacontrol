@@ -1,0 +1,30 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "fix-admin.html",
+      "recover.html",
+      "functions/**",
+      "database/",
+      "config/",
+      "modules/",
+      "includes/",
+      "*.php"
+    ],
+    "rewrites": [
+      { "source": "/", "destination": "/landing.html" }
+    ],
+    "cleanUrls": false
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

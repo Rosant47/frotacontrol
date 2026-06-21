@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rastreador</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;background:#020617;color:#f1f5f9;
+                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+                  display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;user-select:none;overflow:hidden}
+        #dot{width:28px;height:28px;border-radius:50%;background:#1e293b;
+             margin:0 auto 20px;transition:background .4s}
+        #placa{font-size:32px;font-weight:900;letter-spacing:3px;
+               color:#f1f5f9;text-align:center}
+        #modelo{font-size:13px;color:#475569;text-align:center;margin-top:4px}
+        #status{font-size:13px;color:#475569;text-align:center;margin-top:16px}
+        #speed{font-size:56px;font-weight:900;text-align:center;margin-top:20px;
+               color:#22c55e;display:none;line-height:1}
+        #speedUnit{font-size:14px;color:#64748b;text-align:center;margin-top:4px;display:none}
+        #meta{font-size:12px;color:#334155;text-align:center;margin-top:20px;line-height:2}
+        #mot{font-size:13px;color:#475569;text-align:center;margin-top:12px}
+        #errBox{background:#7f1d1d;color:#fca5a5;border-radius:12px;padding:14px 20px;
+                font-size:13px;text-align:center;margin-top:20px;max-width:280px;display:none}
+        @keyframes gpsPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}
+                            70%{box-shadow:0 0 0 18px rgba(34,197,94,0)}
+                            100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+        @keyframes amber{0%,100%{opacity:1}50%{opacity:.25}}
+        .st-active{background:#22c55e!important;animation:gpsPulse 2s infinite}
+        .st-acquiring{background:#f59e0b!important;animation:amber 1.2s infinite}
+        .st-error{background:#dc2626!important}
+    </style>
+</head>
+<body>
+
+<div id="dot"></div>
+<div id="placa">—</div>
+<div id="modelo"></div>
+<div id="status">Inicializando...</div>
+<div id="speed"></div>
+<div id="speedUnit">km/h</div>
+<div id="meta"></div>
+<div id="mot"></div>
+<div id="errBox"></div>
+
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig } from './assets/js/config.js';
+
+const p     = new URLSearchParams(location.search);
+const uso   = p.get('uso')   || '';
+const placa = (p.get('placa') || '—').toUpperCase();
+const mod   = p.get('mod')   || '';
+const mot   = p.get('mot')   || '';
+const eid   = p.get('eid')   || '';
+
+const elPlaca  = document.getElementById('placa');
+const elModelo = document.getElementById('modelo');
+const elStatus = document.getElementById('status');
+const elDot    = document.getElementById('dot');
+const elSpeed  = document.getElementById('speed');
+const elUnit   = document.getElementById('speedUnit');
+const elMeta   = document.getElementById('meta');
+const elMot    = document.getElementById('mot');
+const elErr    = document.getElementById('errBox');
+
+elPlaca.textContent  = placa;
+elModelo.textContent = mod;
+if (mot) elMot.textContent = '👤 ' + mot;
+document.title = placa + ' — Rastreador';
+
+if (!uso) {
+    elStatus.textContent = 'Link inválido';
+    elDot.classList.add('st-error');
+    throw new Error('missing uso param');
+}
+
+// Wake lock — mantém tela acesa
+let wakeLock = null;
+async function keepAwake() {
+    try { wakeLock = await navigator.wakeLock?.request('screen'); } catch(_) {}
+}
+keepAwake();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let lastSend = 0;
+let watchId  = null;
+
+function setStatus(st, msg) {
+    elDot.className = 'st-' + st;
+    elStatus.textContent = msg;
+}
+
+function startWatch() {
+    if (watchId != null) return;
+    setStatus('acquiring', 'Aguardando sinal GPS...');
+    watchId = navigator.geolocation.watchPosition(
+        pos => {
+            const { latitude: lat, longitude: lng, accuracy: prec, speed } = pos.coords;
+            const vel = speed != null ? Math.round(speed * 3.6) : null;
+            const ts  = Date.now();
+
+            setStatus('active', 'GPS ativo — transmitindo');
+            elErr.style.display = 'none';
+
+            if (vel != null) {
+                elSpeed.style.display = 'block';
+                elUnit.style.display  = 'block';
+                elSpeed.textContent   = vel;
+                elSpeed.style.color   = vel > 3 ? '#22c55e' : '#2563eb';
+            } else {
+                elSpeed.style.display = 'none';
+                elUnit.style.display  = 'none';
+            }
+
+            elMeta.innerHTML =
+                `Precisão: <strong>${Math.round(prec)}m</strong><br>` +
+                `Atualizado: <strong>${new Date(ts).toLocaleTimeString('pt-BR')}</strong>`;
+
+            if (ts - lastSend < 15000) return;
+            lastSend = ts;
+
+            const data = { lat, lng, ts, precisao: Math.round(prec), placa, modelo: mod, motoristaNome: mot, empresaId: eid };
+            if (vel != null) data.velocidade = vel;
+            setDoc(doc(db, 'rastreios', uso), data).catch(() => {});
+        },
+        err => {
+            setStatus('error', 'Erro GPS');
+            elErr.style.display = 'block';
+            elErr.textContent   = err.message || 'Permissão de GPS negada';
+            if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            setTimeout(startWatch, 10000); // tenta de novo em 10s
+        },
+        { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
+    );
+}
+
+async function init() {
+    setStatus('acquiring', 'Autenticando...');
+    try {
+        await signInAnonymously(auth);
+    } catch(e) {
+        setStatus('error', 'Erro de autenticação');
+        elErr.style.display = 'block';
+        elErr.textContent   = e.message;
+        return;
+    }
+    if (!navigator.geolocation) {
+        setStatus('error', 'GPS não disponível neste dispositivo');
+        return;
+    }
+    startWatch();
+}
+
+init();
+</script>
+</body>
+</html>

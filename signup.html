@@ -1,0 +1,290 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta — FrotaControl</title>
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1742444040272710');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1742444040272710&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        body{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:16px}
+        .wrap{width:100%;max-width:500px}
+        .card{background:#fff;border-radius:20px;padding:28px 32px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+        .logo{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9}
+        .logo-icon{width:48px;height:48px;flex-shrink:0;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+        h1{font-size:18px;font-weight:700;color:#1e293b;margin:0 0 2px}
+        .subtitle{font-size:12px;color:#64748b;margin:0}
+        .alert{padding:10px 12px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+        .alert-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+        .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+        .alert-info{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+        .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .form-group{margin-bottom:12px}
+        label{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:5px}
+        .input-wrap{position:relative}
+        .input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px}
+        input{width:100%;padding:9px 12px 9px 34px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;color:#1e293b;transition:border-color .2s;font-family:inherit;box-sizing:border-box}
+        input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+        .btn{width:100%;padding:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;margin-top:16px}
+        .btn:hover{opacity:.9}
+        .btn:disabled{opacity:.65;cursor:not-allowed}
+        .footer{text-align:center;margin-top:14px;font-size:11px;color:rgba(255,255,255,.65)}
+        .login-link{text-align:center;margin-top:14px;font-size:13px;color:#64748b}
+        .login-link a{color:#2563eb;text-decoration:none;font-weight:600}
+        .trial-badge{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;margin-bottom:14px}
+        @media(max-width:480px){
+            body{padding:12px}
+            .card{padding:22px 18px}
+            .row2{grid-template-columns:1fr}
+            input{padding:11px 12px 11px 34px;min-height:44px}
+            .btn{min-height:48px;font-size:15px}
+            .trial-badge{font-size:11px}
+        }
+        @media(max-width:360px){
+            .card{padding:18px 14px}
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-building"></i></div>
+            <div>
+                <h1 id="cardTitle">Criar Conta da Empresa</h1>
+                <p class="subtitle">Comece grátis, sem cartão de crédito.</p>
+            </div>
+        </div>
+
+        <div class="trial-badge" id="trialBadge">
+            <i class="fa-solid fa-gift"></i> 7 dias grátis — sem cartão de crédito
+        </div>
+
+        <div class="alert alert-danger" id="errorMsg" style="display:none">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorText"></span>
+        </div>
+        <div class="alert alert-success" id="successMsg" style="display:none">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Conta criada! Redirecionando...</span>
+        </div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label><i class="fa-solid fa-id-card"></i> CNPJ <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional — preenche o nome automaticamente)</span></label>
+                <div class="input-wrap" style="display:flex;gap:8px">
+                    <i class="fa-solid fa-id-card input-icon"></i>
+                    <input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18" autocomplete="off" style="flex:1">
+                    <button type="button" id="buscarCnpjBtn" style="padding:9px 14px;background:#2563eb;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0">
+                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-building"></i> Nome da Empresa</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-building input-icon"></i>
+                    <input type="text" id="nomeEmpresa" required placeholder="Ex: Transportes Silva Ltda" autocomplete="organization">
+                </div>
+            </div>
+
+            <div class="row2">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> Seu Nome</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="nome" required placeholder="João Silva" autocomplete="name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-phone"></i> WhatsApp</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" id="telefone" placeholder="(11) 99999-9999" autocomplete="tel">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row2">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope"></i> E-mail</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="email" required placeholder="joao@empresa.com" autocomplete="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Senha</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="senha" required placeholder="Mín. 6 caracteres" minlength="6" autocomplete="new-password">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="signupBtn">
+                <i class="fa-solid fa-rocket"></i> Criar conta grátis
+            </button>
+        </form>
+
+        <div class="login-link">
+            Já tem uma conta? <a href="login.html">Entrar</a>
+        </div>
+    </div>
+    <div class="footer" id="footerTxt">© <span id="yr"></span> FrotaControl — Gestão de Frota Empresarial</div>
+</div>
+
+<script type="module">
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+document.getElementById('cardTitle').textContent = 'Criar Conta da Empresa';
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.title = `Criar Conta — ${brandConfig.name}`;
+document.getElementById('footerTxt').innerHTML = `© <span>${new Date().getFullYear()}</span> ${brandConfig.name} — Gestão de Frota Empresarial`;
+document.getElementById('trialBadge').innerHTML = `<i class="fa-solid fa-gift"></i> ${brandConfig.trialDays} dias grátis — sem cartão de crédito`;
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// CNPJ mask
+document.getElementById('cnpj').addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g,'').slice(0,14);
+    v = v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');
+    e.target.value = v;
+});
+async function buscarCnpj() {
+    const cnpj = document.getElementById('cnpj').value.replace(/\D/g,'');
+    if (cnpj.length !== 14) return;
+    const btn = document.getElementById('buscarCnpjBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        if (r.ok) {
+            const j = await r.json();
+            if (j.razao_social || j.nome_fantasia)
+                document.getElementById('nomeEmpresa').value = j.nome_fantasia || j.razao_social;
+        }
+    } catch(e) {}
+    btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Buscar';
+}
+document.getElementById('buscarCnpjBtn').addEventListener('click', buscarCnpj);
+document.getElementById('cnpj').addEventListener('blur', () => { if (document.getElementById('cnpj').value.replace(/\D/g,'').length === 14) buscarCnpj(); });
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn         = document.getElementById('signupBtn');
+    const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
+    const nome        = document.getElementById('nome').value.trim();
+    const email       = document.getElementById('email').value.trim();
+    const senha       = document.getElementById('senha').value;
+    const telefone    = document.getElementById('telefone').value.trim();
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando conta...';
+    document.getElementById('errorMsg').style.display = 'none';
+
+    try {
+        // 1. Cria usuário no Firebase Auth
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        const uid  = cred.user.uid;
+
+        // 2. Data de expiração do trial
+        const trialDays  = brandConfig.trialDays || 14;
+        const trialExpira = Timestamp.fromDate(new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000));
+
+        // 3. Cria empresa no Firestore
+        const empresaRef = await addDoc(collection(db, 'empresas'), {
+            nome:        nomeEmpresa,
+            adminUid:    uid,
+            ativo:       true,
+            plano:       'trial',
+            trialExpira,
+            criadoEm:    serverTimestamp(),
+        });
+
+        // 4. Cria perfil do admin vinculado à empresa
+        await setDoc(doc(db, 'usuarios', uid), {
+            nome,
+            email,
+            telefone:  telefone || '',
+            perfil:    'admin',
+            ativo:     true,
+            empresaId: empresaRef.id,
+            criadoEm:  serverTimestamp(),
+        });
+
+        // 5. Envia e-mail de verificação
+        await sendEmailVerification(cred.user);
+
+        // 6. Notificação push (ntfy.sh) e WhatsApp (CallMeBot) para o superadmin
+        if (brandConfig.ntfyTopic) {
+            fetch(`https://ntfy.sh/${brandConfig.ntfyTopic}`, {
+                method: 'POST',
+                headers: {
+                    'Title':    `🆕 ${brandConfig.name} — Novo cadastro`,
+                    'Priority': 'high',
+                    'Tags':     'office_building',
+                },
+                body: `Empresa: ${nomeEmpresa}\nAdmin: ${nome}\nEmail: ${email}${telefone ? '\nTel: ' + telefone : ''}\nTrial de ${brandConfig.trialDays} dias iniciado.`,
+            }).catch(() => {});
+        }
+        if (brandConfig.callmebotApiKey && brandConfig.supportWhatsApp) {
+            const phone = brandConfig.supportWhatsApp.replace(/\D/g,'');
+            const texto = `🆕 *${brandConfig.name} — Novo cadastro!*\n\nEmpresa: *${nomeEmpresa}*\nAdmin: ${nome}\nEmail: ${email}${telefone ? '\nTel: ' + telefone : ''}\n\nTrial de ${brandConfig.trialDays} dias iniciado.\nAcesse admin-planos para acompanhar.`;
+            fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(texto)}&apikey=${brandConfig.callmebotApiKey}`, { mode: 'no-cors' }).catch(() => {});
+        }
+
+        // 7. Evento de conversão para o Meta Pixel
+        if (typeof fbq !== 'undefined') fbq('track', 'Lead');
+
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('successMsg').innerHTML = `
+            <i class="fa-solid fa-envelope-circle-check" style="font-size:18px"></i>
+            <div>
+                <strong>Conta criada! Verifique seu e-mail.</strong><br>
+                <span style="font-size:12px">Enviamos um link de confirmação para <b>${email}</b>. Clique no link e depois <a href="login.html" style="color:#16a34a">faça login</a>.</span>
+            </div>`;
+        document.getElementById('successMsg').style.display = 'flex';
+
+    } catch (err) {
+        const msgs = {
+            'auth/email-already-in-use': 'Este e-mail já está cadastrado. <a href="login.html" style="color:#dc2626">Fazer login</a>.',
+            'auth/invalid-email':        'E-mail inválido.',
+            'auth/weak-password':        'Senha muito fraca. Use ao menos 6 caracteres.',
+        };
+        document.getElementById('errorText').innerHTML = msgs[err.code] || 'Erro ao criar conta: ' + (err.message || err.code);
+        document.getElementById('errorMsg').style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Criar conta grátis';
+    }
+});
+</script>
+</body>
+</html>

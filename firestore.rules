@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function profileExists() {
+      return exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+    }
+
+    function canEdit() {
+      return isAuthenticated()
+          && profileExists()
+          && userProfile().ativo == true
+          && userProfile().perfil in ['admin', 'gerente', 'superadmin'];
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+          && profileExists()
+          && userProfile().ativo == true
+          && userProfile().perfil in ['admin', 'superadmin'];
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated()
+          && profileExists()
+          && userProfile().perfil == 'superadmin';
+    }
+
+    function sameCompany() {
+      return profileExists() && resource.data.empresaId == userProfile().empresaId;
+    }
+
+    function writeSameCompany() {
+      return profileExists() && request.resource.data.empresaId == userProfile().empresaId;
+    }
+
+    // Convites: get público (validar código antes de criar conta); list só admin; consumo por autenticado
+    match /convites/{code} {
+      allow get:    if true;
+      allow list:   if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAuthenticated()
+          && resource.data.usado == false
+          && request.resource.data.usado == true
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['usado', 'usadoPor', 'usadoEm']);
+      allow delete: if isAdmin();
+    }
+
+    // Empresas: qualquer autenticado lê; usuário cria sua própria empresa; admin da empresa atualiza
+    match /empresas/{empresaId} {
+      allow read:   if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.adminUid == request.auth.uid;
+      // superadmin pode alterar qualquer campo; admin da empresa só pode marcar como 'pendente'
+      allow update: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com')
+          || (isAdmin() && resource.data.adminUid == request.auth.uid
+              && (!request.resource.data.keys().hasAny(['plano'])
+                  || request.resource.data.plano == 'pendente'));
+      allow delete: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+    }
+
+    // Usuários: qualquer autenticado lê; admin/superadmin ou o próprio usuário escreve
+    match /usuarios/{uid} {
+      allow read:   if isAuthenticated();
+      allow write:  if isAdmin() || isSuperAdmin() || (isAuthenticated() && request.auth.uid == uid);
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // Veículos
+    match /veiculos/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Motoristas
+    match /motoristas/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Utilizações
+    match /utilizacoes/{id} {
+      allow get:    if true; // leitura individual pública (página do motorista)
+      allow list:   if isAuthenticated();
+      allow create: if canEdit() && writeSameCompany();
+      allow update: if (canEdit() && writeSameCompany())
+        || (isAuthenticated() && profileExists() && sameCompany()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['localizacao', 'trilha']))
+        || (resource.data.linkToken != null
+            && resource.data.linkToken == request.resource.data.linkToken);
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Rastreios públicos — leitura sem auth; escrita por qualquer autenticado (incl. anônimo do tracker.html)
+    match /rastreios/{id} {
+      allow read:   if true;
+      allow write:  if isAuthenticated();
+    }
+
+    // Dispositivos GPS — somente admin da empresa lê/escreve; função backend usa Admin SDK
+    match /dispositivos/{id} {
+      allow read:   if isAdmin() && sameCompany();
+      allow create: if isAdmin() && writeSameCompany();
+      allow update: if isAdmin() && sameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Multas
+    match /multas/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Abastecimentos
+    match /abastecimentos/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Escalas de rodízio
+    match /escalas/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Manutenções
+    match /manutencoes/{id} {
+      allow read:   if isAuthenticated();
+      allow write:  if canEdit() && writeSameCompany();
+      allow delete: if isAdmin() && sameCompany();
+    }
+
+    // Configurações globais da plataforma (preços, etc.) — leitura pública, escrita só superadmin
+    match /configuracoes/{docId} {
+      allow read:  if true;
+      allow write: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+    }
+
+    // Logs de atividade — qualquer autenticado grava; só superadmin lê
+    match /logs/{id} {
+      allow create: if isAuthenticated();
+      allow read:   if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+      allow update, delete: if false;
+    }
+  }
+}

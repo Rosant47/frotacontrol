@@ -1,0 +1,26 @@
+{
+  "name": "FrotaControl",
+  "short_name": "FrotaControl",
+  "description": "Sistema de Controle de Frota Empresarial",
+  "_nota": "Altere name e short_name para o nome do cliente",
+  "start_url": "/login.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}

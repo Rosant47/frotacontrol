@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rastreamento ao Vivo — FrotaControl</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+             background:#0f172a;color:#f1f5f9;display:flex;flex-direction:column}
+        #topBar{background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:12px 16px;
+                display:flex;align-items:center;gap:12px;flex-shrink:0}
+        .logo-icon{width:42px;height:42px;background:rgba(255,255,255,.15);border-radius:11px;
+                   display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        #vInfo{flex:1;min-width:0}
+        #vPlaca{font-size:19px;font-weight:800;letter-spacing:.5px;line-height:1.2}
+        #vModelo{font-size:12px;opacity:.7;margin-top:2px}
+        #speedBadge{padding:5px 14px;border-radius:20px;font-size:14px;font-weight:700;
+                    flex-shrink:0;transition:background .4s,transform .2s;display:none}
+        #mapEl{flex:1;min-height:200px}
+        #infoBar{background:#1e293b;padding:10px 16px;display:flex;gap:12px;
+                 flex-wrap:wrap;flex-shrink:0;border-top:1px solid #334155;align-items:center}
+        .chip{display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8}
+        .chip strong{color:#f1f5f9}
+        #liveDot{width:9px;height:9px;border-radius:50%;background:#22c55e;
+                 animation:pulse 2s infinite;flex-shrink:0}
+        #noSignal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                  background:#1e293b;padding:30px 36px;border-radius:18px;text-align:center;
+                  box-shadow:0 16px 48px rgba(0,0,0,.5);border:1px solid #334155;z-index:500;
+                  max-width:280px}
+        #noSignal i{font-size:42px;color:#334155;display:block;margin-bottom:14px}
+        #noSignal h2{font-size:16px;margin-bottom:6px}
+        #noSignal p{font-size:12px;color:#64748b}
+        #footer{text-align:center;font-size:11px;color:#1e293b;background:#0f172a;
+                padding:7px;flex-shrink:0}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    </style>
+</head>
+<body>
+
+<div id="topBar">
+    <div class="logo-icon"><i class="fa-solid fa-location-dot"></i></div>
+    <div id="vInfo">
+        <div id="vPlaca">Carregando...</div>
+        <div id="vModelo"></div>
+    </div>
+    <div id="speedBadge" style="background:#2563eb;color:#fff">— km/h</div>
+</div>
+
+<div style="position:relative;flex:1;display:flex;flex-direction:column">
+    <div id="mapEl"></div>
+    <div id="noSignal" style="display:none">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <h2>Aguardando sinal GPS</h2>
+        <p>O motorista ainda não compartilhou a localização ou o link é inválido.</p>
+    </div>
+</div>
+
+<div id="infoBar">
+    <div class="chip"><div id="liveDot"></div><strong>Ao vivo</strong></div>
+    <div class="chip"><i class="fa-solid fa-user"></i>Motorista: <strong id="iMot">—</strong></div>
+    <div class="chip"><i class="fa-solid fa-clock"></i>Atualizado: <strong id="iAt">—</strong></div>
+    <div class="chip"><i class="fa-solid fa-crosshairs"></i>Precisão: <strong id="iPrec">—</strong></div>
+    <div class="chip" style="margin-left:auto;opacity:.5">
+        <i class="fa-solid fa-shield-halved"></i>FrotaControl
+    </div>
+</div>
+<div id="footer">Rastreamento seguro · os dados são removidos ao encerrar a utilização</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, onSnapshot }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig, brandConfig } from './assets/js/config.js';
+
+document.title = `Rastreamento ao Vivo — ${brandConfig.name}`;
+document.querySelector('#topBar h1')?.remove();
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const id = new URLSearchParams(location.search).get('id');
+if (!id) {
+    document.getElementById('vPlaca').textContent = 'Link inválido';
+    document.getElementById('noSignal').style.display = 'block';
+} else {
+    const map = L.map('mapEl', { zoomControl:true }).setView([-15.7942,-47.8825], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom:19
+    }).addTo(map);
+
+    let marker    = null;
+    let firstFix  = true;
+    let prevLatLng = null;
+    let curBearing = 0;
+
+    function calcBearing(lat1, lng1, lat2, lng2) {
+        const D2R = Math.PI / 180;
+        const dLng = (lng2 - lng1) * D2R;
+        const y = Math.sin(dLng) * Math.cos(lat2 * D2R);
+        const x = Math.cos(lat1 * D2R) * Math.sin(lat2 * D2R)
+                - Math.sin(lat1 * D2R) * Math.cos(lat2 * D2R) * Math.cos(dLng);
+        return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    }
+
+    function buildCarIcon(placa, velocidade, bearing, color) {
+        const vel = velocidade != null ? `${velocidade} km/h` : '';
+        return L.divIcon({
+            html: `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+              <div style="transform:rotate(${bearing}deg);transition:transform .6s ease;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))">
+                <svg viewBox="0 0 32 52" width="32" height="52" xmlns="http://www.w3.org/2000/svg">
+                  <!-- body -->
+                  <rect x="5" y="8" width="22" height="36" rx="6" fill="${color}"/>
+                  <!-- windshield front -->
+                  <rect x="8" y="10" width="16" height="11" rx="3" fill="rgba(255,255,255,.65)"/>
+                  <!-- rear window -->
+                  <rect x="8" y="33" width="16" height="8" rx="2" fill="rgba(255,255,255,.35)"/>
+                  <!-- roof shine -->
+                  <rect x="10" y="12" width="5" height="7" rx="2" fill="rgba(255,255,255,.25)"/>
+                  <!-- headlights -->
+                  <rect x="8"  y="7" width="5" height="3" rx="1.5" fill="#fef08a"/>
+                  <rect x="19" y="7" width="5" height="3" rx="1.5" fill="#fef08a"/>
+                  <!-- taillights -->
+                  <rect x="8"  y="42" width="5" height="3" rx="1.5" fill="#fca5a5"/>
+                  <rect x="19" y="42" width="5" height="3" rx="1.5" fill="#fca5a5"/>
+                  <!-- wheel FL -->
+                  <rect x="1" y="11" width="5" height="10" rx="2.5" fill="#0f172a"/>
+                  <!-- wheel FR -->
+                  <rect x="26" y="11" width="5" height="10" rx="2.5" fill="#0f172a"/>
+                  <!-- wheel RL -->
+                  <rect x="1" y="31" width="5" height="10" rx="2.5" fill="#0f172a"/>
+                  <!-- wheel RR -->
+                  <rect x="26" y="31" width="5" height="10" rx="2.5" fill="#0f172a"/>
+                </svg>
+              </div>
+              <div style="background:${color};color:#fff;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);line-height:1.4">
+                ${esc(placa||'')}${vel ? `<span style="opacity:.85;font-weight:500"> · ${vel}</span>` : ''}
+              </div>
+            </div>`,
+            className: '',
+            iconSize: [90, 90],
+            iconAnchor: [45, 52]
+        });
+    }
+
+    onSnapshot(doc(db, 'rastreios', id), snap => {
+        const ns = document.getElementById('noSignal');
+        if (!snap.exists() || !snap.data()?.lat) {
+            ns.style.display = 'block';
+            document.getElementById('vPlaca').textContent = 'Sem dados';
+            return;
+        }
+        ns.style.display = 'none';
+        const d = snap.data();
+
+        // Header
+        document.getElementById('vPlaca').textContent  = d.placa  || '—';
+        document.getElementById('vModelo').textContent = d.modelo || '';
+        document.title = `${d.placa||'Veículo'} — Rastreamento ao Vivo`;
+
+        // Badge de velocidade
+        const sb = document.getElementById('speedBadge');
+        if (d.velocidade != null) {
+            sb.style.display    = '';
+            sb.textContent      = `${d.velocidade} km/h`;
+            sb.style.background = d.velocidade > 3 ? '#16a34a' : '#2563eb';
+        } else { sb.style.display = 'none'; }
+
+        // Info bar
+        document.getElementById('iMot').textContent  = d.motoristaNome || '—';
+        document.getElementById('iAt').textContent   = d.ts ? new Date(d.ts).toLocaleTimeString('pt-BR') : '—';
+        document.getElementById('iPrec').textContent = d.precisao != null ? d.precisao+'m' : '—';
+
+        // Calcula direção entre posições consecutivas
+        const latlng   = [d.lat, d.lng];
+        const isMoving = d.velocidade != null && d.velocidade > 3;
+        if (isMoving && prevLatLng) {
+            const b = calcBearing(prevLatLng[0], prevLatLng[1], d.lat, d.lng);
+            if (!isNaN(b)) curBearing = b;
+        }
+        prevLatLng = latlng;
+
+        const color = isMoving ? '#16a34a' : '#2563eb';
+        const icon  = buildCarIcon(d.placa, d.velocidade, curBearing, color);
+
+        if (marker) { marker.setLatLng(latlng); marker.setIcon(icon); }
+        else        { marker = L.marker(latlng, { icon }).addTo(map); }
+
+        if (firstFix) { map.setView(latlng, 16); firstFix = false; }
+        else map.panTo(latlng);
+
+    }, () => {
+        document.getElementById('noSignal').style.display = 'block';
+        document.getElementById('vPlaca').textContent = 'Erro ao carregar';
+    });
+}
+</script>
+</body>
+</html>

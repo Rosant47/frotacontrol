@@ -1,0 +1,101 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "veiculos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "placa",     "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "motoristas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "nome",      "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "abastecimentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "data",      "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "manutencoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "data",      "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "utilizacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId",       "order": "ASCENDING" },
+        { "fieldPath": "dataUtilizacao",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "multas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId",    "order": "ASCENDING" },
+        { "fieldPath": "dataInfracao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "utilizacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "veiculoId",      "order": "ASCENDING" },
+        { "fieldPath": "dataUtilizacao", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "utilizacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dataUtilizacao", "order": "DESCENDING" },
+        { "fieldPath": "criadoEm",       "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "multas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dataInfracao", "order": "DESCENDING" },
+        { "fieldPath": "criadoEm",     "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "usuarios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "nome",      "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "dispositivos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "nome",      "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "utilizacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empresaId", "order": "ASCENDING" },
+        { "fieldPath": "status",    "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
