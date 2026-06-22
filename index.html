@@ -48,7 +48,7 @@
         <a class="nav-item" data-page="infracoes"><i class="fa-solid fa-book-open"></i> Infrações CTB</a>
         <a class="nav-item" data-page="map"><i class="fa-solid fa-map-location-dot"></i> Rastreamento</a>
         <a class="nav-item" data-page="rodizio"><i class="fa-solid fa-rotate"></i> Rodízio</a>
-        <a class="nav-item" data-page="licenciamento"><i class="fa-solid fa-file-certificate"></i> Licenciamento</a>
+        <a class="nav-item" data-page="licenciamento"><i class="fa-solid fa-file-shield"></i> Licenciamento</a>
         <a class="nav-item" data-page="fuel"><i class="fa-solid fa-gas-pump"></i> Combustível</a>
         <a class="nav-item" data-page="manutencao"><i class="fa-solid fa-wrench"></i> Manutenção</a>
         <div class="nav-section-title">Análise</div>
@@ -56,7 +56,7 @@
         <div class="nav-section-title admin-nav" style="display:none">Administração</div>
         <a class="nav-item admin-nav" data-page="users" style="display:none"><i class="fa-solid fa-users-gear"></i> Usuários</a>
         <a class="nav-item admin-nav" data-page="empresa" style="display:none"><i class="fa-solid fa-building"></i> Minha Empresa</a>
-        <a class="nav-item superadmin-nav" href="admin-planos.html" style="display:none"><i class="fa-solid fa-crown"></i> Painel Superadmin</a>
+        <a class="nav-item superadmin-nav" href="admin-planos.html" style="display:none"><i class="fa-solid fa-crown"></i> Painel Superadmin <span id="badgeSugestoes" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px"></span></a>
         <div class="nav-section-title">Suporte</div>
         <a class="nav-item" data-page="ajuda"><i class="fa-solid fa-circle-question"></i> Ajuda</a>
     </nav>
@@ -201,7 +201,7 @@ function limparCacheRecarregar() {
             <span>Rodízio</span>
         </button>
         <button class="bn-sheet-item" data-page="licenciamento">
-            <div class="bsi-icon" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-file-certificate"></i></div>
+            <div class="bsi-icon" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-file-shield"></i></div>
             <span>Licenciamento</span>
         </button>
         <button class="bn-sheet-item" data-page="fuel">
@@ -228,8 +228,8 @@ function limparCacheRecarregar() {
             <div class="bsi-icon" style="background:#f0f9ff;color:#0284c7"><i class="fa-solid fa-circle-question"></i></div>
             <span>Ajuda</span>
         </button>
-        <a class="bn-sheet-item superadmin-nav" href="admin-planos.html" style="display:none;text-decoration:none">
-            <div class="bsi-icon" style="background:#fef9c3;color:#ca8a04"><i class="fa-solid fa-crown"></i></div>
+        <a class="bn-sheet-item superadmin-nav" href="admin-planos.html" style="display:none;text-decoration:none;position:relative">
+            <div class="bsi-icon" style="background:#fef9c3;color:#ca8a04;position:relative"><i class="fa-solid fa-crown"></i><span id="badgeSugestoesMobile" style="display:none;position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px"></span></div>
             <span>Admin</span>
         </a>
     </div>

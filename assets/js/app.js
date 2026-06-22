@@ -378,6 +378,7 @@ async function initApp() {
     }
     if (p.perfil === 'superadmin' || state.user?.email === brandConfig.superadminEmail) {
         document.querySelectorAll('.superadmin-nav').forEach(el => el.style.display = '');
+        iniciarBadgeSugestoes();
     }
 
     // Nav clicks
@@ -1285,7 +1286,7 @@ async function renderDashboard() {
         ${licAlerts.map(v => {
             const diff = Math.floor((new Date(v.dataLicenciamento+'T00:00:00') - now) / 86400000);
             return `<div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #f8fafc">
-                <div style="width:36px;height:36px;border-radius:12px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#7c3aed"><i class="fa-solid fa-file-certificate"></i></div>
+                <div style="width:36px;height:36px;border-radius:12px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#7c3aed"><i class="fa-solid fa-file-shield"></i></div>
                 <div style="flex:1;min-width:0">
                     <div style="font-weight:700;font-size:13px">${esc(v.placa)} — CRLV</div>
                     <div style="font-size:11px;color:#94a3b8">Licenciamento ${diff<0?'VENCIDO':'vence'} ${diff<0?`há ${Math.abs(diff)}d`:`em ${diff}d`}</div>
@@ -4842,7 +4843,7 @@ async function renderLicenciamento() {
     setContent(`
     <div class="page-header">
         <div class="page-title-wrap">
-            <h1 class="page-title"><i class="fa-solid fa-file-certificate" style="color:var(--accent)"></i> Licenciamento</h1>
+            <h1 class="page-title"><i class="fa-solid fa-file-shield" style="color:var(--accent)"></i> Licenciamento</h1>
             <p class="page-subtitle">${vehicles.length} veículo(s)</p>
         </div>
         <button class="btn btn-secondary" id="licPrintBtn"><i class="fa-solid fa-print"></i> PDF</button>
@@ -6817,6 +6818,22 @@ async function renderAjuda() {
     }
 
     buildHtml();
+}
+
+// ── Badge de sugestões não lidas (superadmin) ─────────────────
+let _badgeUnsubSugestoes = null;
+function iniciarBadgeSugestoes() {
+    if (_badgeUnsubSugestoes) return;
+    const q = query(collection(db, 'sugestoes'), where('lida', '==', false));
+    _badgeUnsubSugestoes = onSnapshot(q, snap => {
+        const count = snap.size;
+        ['badgeSugestoes', 'badgeSugestoesMobile'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = ''; }
+            else { el.style.display = 'none'; }
+        });
+    }, () => {});
 }
 
 // ── Chat de sugestões ─────────────────────────────────────────
