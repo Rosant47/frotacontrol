@@ -6916,7 +6916,16 @@ function showSugestaoModal() {
         document.getElementById('chatLoading').textContent = 'Faça login para enviar sugestões.';
     }
 
-    function closeChat() { if (unsub) unsub(); overlay.remove(); }
+    async function closeChat() {
+        if (unsub) unsub();
+        overlay.remove();
+        if (uid) {
+            try {
+                const snap = await getDocs(query(collection(db, 'sugestoes'), where('userId', '==', uid)));
+                snap.docs.forEach(d => deleteDoc(doc(db, 'sugestoes', d.id)));
+            } catch(e) {}
+        }
+    }
     overlay.addEventListener('click', e => { if (e.target === overlay) closeChat(); });
     document.getElementById('chatClose').addEventListener('click', closeChat);
 

@@ -161,7 +161,9 @@ service cloud.firestore {
           || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow update: if isSuperAdmin()
           || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
-      allow delete: if false;
+      allow delete: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com')
+          || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
     // Logs de atividade — qualquer autenticado grava; só superadmin lê
