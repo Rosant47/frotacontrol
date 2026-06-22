@@ -788,9 +788,11 @@ function renderSugestoes() {
     }
 
     list.innerHTML = allSugestoes.map(s => {
-        const data = s.criadoEm?.toDate ? s.criadoEm.toDate().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+        const data     = s.criadoEm?.toDate     ? s.criadoEm.toDate().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+        const respData = s.respondidoEm?.toDate ? s.respondidoEm.toDate().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+        const respondida = !!s.resposta;
         return `
-        <div style="border:1.5px solid ${s.lida ? '#f1f5f9' : '#fde047'};border-radius:12px;padding:14px 16px;margin-bottom:10px;background:${s.lida ? '#fafafa' : '#fefce8'}">
+        <div id="sug-${s.id}" style="border:1.5px solid ${respondida ? '#bbf7d0' : s.lida ? '#f1f5f9' : '#fde047'};border-radius:12px;padding:14px 16px;margin-bottom:10px;background:${respondida ? '#f0fdf4' : s.lida ? '#fafafa' : '#fefce8'}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
                 <div style="flex:1;min-width:0">
                     <div style="font-size:13px;color:#1e293b;line-height:1.6;white-space:pre-wrap">${s.texto.replace(/</g,'&lt;')}</div>
@@ -800,13 +802,65 @@ function renderSugestoes() {
                         <span><i class="fa-solid fa-clock"></i> ${data}</span>
                     </div>
                 </div>
-                ${!s.lida ? `<button class="btn-sm" style="background:#fff;color:#854d0e;border:1.5px solid #fde047;white-space:nowrap;flex-shrink:0" onclick="marcarLida('${s.id}')">
-                    <i class="fa-solid fa-check"></i> Marcar lida
-                </button>` : '<span style="font-size:11px;color:#94a3b8;flex-shrink:0;padding-top:2px"><i class="fa-solid fa-circle-check"></i> Lida</span>'}
+                <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center">
+                    ${!respondida ? `<button class="btn-sm btn-ativar" onclick="abrirResposta('${s.id}')">
+                        <i class="fa-solid fa-reply"></i> Responder
+                    </button>` : `<span style="font-size:11px;color:#16a34a"><i class="fa-solid fa-circle-check"></i> Respondida</span>`}
+                    ${!s.lida ? `<button class="btn-sm" style="background:#fff;color:#854d0e;border:1.5px solid #fde047" onclick="marcarLida('${s.id}')">
+                        <i class="fa-solid fa-check"></i> Lida
+                    </button>` : ''}
+                </div>
+            </div>
+            ${respondida ? `
+            <div style="margin-top:12px;padding:10px 14px;background:#dcfce7;border-radius:10px;border-left:3px solid #16a34a">
+                <div style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:4px"><i class="fa-solid fa-headset"></i> Resposta enviada — ${respData}</div>
+                <div style="font-size:13px;color:#166534;white-space:pre-wrap">${s.resposta.replace(/</g,'&lt;')}</div>
+            </div>` : ''}
+            <div id="reply-area-${s.id}" style="display:none;margin-top:12px">
+                <textarea id="reply-txt-${s.id}" rows="3" placeholder="Digite sua resposta..."
+                    style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+                    <button class="btn-sm" style="background:#f1f5f9;color:#64748b" onclick="fecharResposta('${s.id}')">Cancelar</button>
+                    <button class="btn-sm" style="background:#16a34a;color:#fff" onclick="enviarResposta('${s.id}')">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar resposta
+                    </button>
+                </div>
             </div>
         </div>`;
     }).join('');
 }
+
+window.abrirResposta = (id) => {
+    document.getElementById(`reply-area-${id}`).style.display = 'block';
+    document.getElementById(`reply-txt-${id}`).focus();
+};
+
+window.fecharResposta = (id) => {
+    document.getElementById(`reply-area-${id}`).style.display = 'none';
+};
+
+window.enviarResposta = async (id) => {
+    const txt = document.getElementById(`reply-txt-${id}`).value.trim();
+    if (!txt) { alert('Digite uma resposta antes de enviar.'); return; }
+    const btn = document.querySelector(`#reply-area-${id} button:last-child`);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        await updateDoc(doc(db, 'sugestoes', id), {
+            resposta:     txt,
+            respondidoEm: serverTimestamp(),
+            status:       'respondido',
+            lida:         true,
+        });
+        const s = allSugestoes.find(s => s.id === id);
+        if (s) { s.resposta = txt; s.respondidoEm = { toDate: () => new Date() }; s.status = 'respondido'; s.lida = true; }
+        renderSugestoes();
+    } catch(e) {
+        alert('Erro ao enviar resposta: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar resposta';
+    }
+};
 
 window.marcarLida = async (id) => {
     try {

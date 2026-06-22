@@ -6819,36 +6819,100 @@ async function renderAjuda() {
     buildHtml();
 }
 
-// ── Modal de sugestão ─────────────────────────────────────────
+// ── Chat de sugestões ─────────────────────────────────────────
 function showSugestaoModal() {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0';
     overlay.innerHTML = `
-        <div style="background:var(--card,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.3)">
-            <h2 style="font-size:17px;font-weight:700;color:var(--text,#1e293b);margin:0 0 6px">
-                <i class="fa-solid fa-lightbulb" style="color:var(--accent,#2563eb)"></i> Enviar sugestão
-            </h2>
-            <p style="font-size:13px;color:var(--muted,#64748b);margin:0 0 18px">Tem alguma ideia ou melhoria? Conta pra gente!</p>
-            <textarea id="sugestaoTxt" rows="5" placeholder="Descreva sua sugestão..."
-                style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;font-size:14px;resize:vertical;box-sizing:border-box;background:var(--bg,#f8fafc);color:var(--text,#1e293b);font-family:inherit"></textarea>
-            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
-                <button id="sugestaoCancel" style="padding:10px 18px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text,#1e293b)">Cancelar</button>
-                <button id="sugestaoSend" style="padding:10px 20px;background:linear-gradient(135deg,var(--accent,#2563eb),var(--accent-dk,#1d4ed8));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">
-                    <i class="fa-solid fa-paper-plane"></i> Enviar
+        <div style="background:var(--card,#fff);border-radius:20px 20px 0 0;width:100%;max-width:520px;display:flex;flex-direction:column;max-height:88vh;box-shadow:0 -8px 40px rgba(0,0,0,.25)">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,#e2e8f0);flex-shrink:0">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#2563eb),var(--accent-dk,#1d4ed8));display:flex;align-items:center;justify-content:center">
+                        <i class="fa-solid fa-headset" style="color:#fff;font-size:15px"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--text,#1e293b)">Sugestões & Feedback</div>
+                        <div style="font-size:11px;color:#16a34a;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span> Online</div>
+                    </div>
+                </div>
+                <button id="chatClose" style="background:var(--bg,#f1f5f9);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:var(--muted,#64748b);display:flex;align-items:center;justify-content:center">×</button>
+            </div>
+            <div id="chatHistory" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:120px">
+                <div id="chatLoading" style="text-align:center;padding:20px;color:var(--muted,#94a3b8);font-size:13px"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            </div>
+            <div style="padding:12px 16px;border-top:1px solid var(--border,#e2e8f0);flex-shrink:0;display:flex;gap:10px;align-items:flex-end">
+                <textarea id="sugestaoTxt" rows="2" placeholder="Envie uma sugestão ou dúvida..."
+                    style="flex:1;padding:10px 12px;border:1.5px solid var(--border,#e2e8f0);border-radius:14px;font-size:13px;resize:none;box-sizing:border-box;background:var(--bg,#f8fafc);color:var(--text,#1e293b);font-family:inherit;outline:none;line-height:1.4"></textarea>
+                <button id="sugestaoSend" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#2563eb),var(--accent-dk,#1d4ed8));color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <i class="fa-solid fa-paper-plane" style="font-size:14px"></i>
                 </button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
 
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    document.getElementById('sugestaoCancel').addEventListener('click', () => overlay.remove());
+    function renderHistory(docs) {
+        const hist = document.getElementById('chatHistory');
+        if (!docs.length) {
+            hist.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--muted,#94a3b8);font-size:13px"><i class="fa-solid fa-lightbulb" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Nenhuma mensagem ainda.<br>Envie sua primeira sugestão!</div>';
+            return;
+        }
+        hist.innerHTML = docs.map(s => {
+            const data = s.criadoEm?.toDate ? s.criadoEm.toDate().toLocaleTimeString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+            const respData = s.respondidoEm?.toDate ? s.respondidoEm.toDate().toLocaleTimeString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+            return `
+            <div style="display:flex;justify-content:flex-end">
+                <div style="max-width:80%">
+                    <div style="background:linear-gradient(135deg,var(--accent,#2563eb),var(--accent-dk,#1d4ed8));color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13px;line-height:1.5;white-space:pre-wrap">${s.texto.replace(/</g,'&lt;')}</div>
+                    <div style="font-size:10px;color:var(--muted,#94a3b8);text-align:right;margin-top:3px">${data}</div>
+                </div>
+            </div>
+            ${s.resposta ? `
+            <div style="display:flex;justify-content:flex-start;gap:8px;align-items:flex-end">
+                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0f766e,#0d9488);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <i class="fa-solid fa-headset" style="color:#fff;font-size:11px"></i>
+                </div>
+                <div style="max-width:80%">
+                    <div style="background:var(--bg,#f1f5f9);color:var(--text,#1e293b);padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;line-height:1.5;white-space:pre-wrap">${s.resposta.replace(/</g,'&lt;')}</div>
+                    <div style="font-size:10px;color:var(--muted,#94a3b8);margin-top:3px">${respData}</div>
+                </div>
+            </div>` : `
+            <div style="display:flex;justify-content:flex-start;padding-left:36px">
+                <span style="font-size:11px;color:var(--muted,#94a3b8);background:var(--bg,#f1f5f9);padding:3px 10px;border-radius:20px"><i class="fa-solid fa-clock"></i> Aguardando resposta...</span>
+            </div>`}`;
+        }).join('');
+        hist.scrollTop = hist.scrollHeight;
+    }
+
+    const uid = state.user?.uid;
+    let unsub = null;
+    if (uid) {
+        unsub = onSnapshot(
+            query(collection(db, 'sugestoes'), where('userId', '==', uid)),
+            snap => {
+                const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (a.criadoEm?.seconds || 0) - (b.criadoEm?.seconds || 0));
+                renderHistory(docs);
+            },
+            () => { document.getElementById('chatLoading').textContent = 'Erro ao carregar mensagens.'; }
+        );
+    } else {
+        document.getElementById('chatLoading').textContent = 'Faça login para enviar sugestões.';
+    }
+
+    function closeChat() { if (unsub) unsub(); overlay.remove(); }
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeChat(); });
+    document.getElementById('chatClose').addEventListener('click', closeChat);
+
+    document.getElementById('sugestaoTxt').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('sugestaoSend').click(); }
+    });
+
     document.getElementById('sugestaoSend').addEventListener('click', async () => {
         const txt = document.getElementById('sugestaoTxt').value.trim();
-        if (!txt) { showToast('Escreva sua sugestão antes de enviar.', 'warning'); return; }
+        if (!txt) return;
 
         const sendBtn = document.getElementById('sugestaoSend');
         sendBtn.disabled = true;
-        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
 
         const empresa   = state.empresa?.nome  || 'desconhecida';
         const userEmail = state.user?.email    || '';
@@ -6860,16 +6924,18 @@ function showSugestaoModal() {
                 texto:     txt,
                 empresa:   empresa,
                 empresaId: state.empresa?.id || state.profile?.empresaId || '',
+                userId:    uid || '',
                 usuario:   userName,
                 email:     userEmail,
                 lida:      false,
+                status:    'aberto',
                 criadoEm:  serverTimestamp(),
             });
+            document.getElementById('sugestaoTxt').value = '';
         } catch(err) {
-            showToast('Erro ao enviar sugestão: ' + err.message, 'error');
+            showToast('Erro ao enviar: ' + err.message, 'error');
+        } finally {
             sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar';
-            return;
         }
 
         if (brandConfig.ntfyTopic) {
@@ -6883,9 +6949,6 @@ function showSugestaoModal() {
             const phone = brandConfig.supportWhatsApp.replace(/\D/g, '');
             fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(mensagem)}&apikey=${brandConfig.callmebotApiKey}`, { mode: 'no-cors' }).catch(() => {});
         }
-
-        overlay.remove();
-        showToast('Sugestão enviada! Obrigado pelo feedback.');
     });
 }
 
