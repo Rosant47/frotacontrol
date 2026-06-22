@@ -1186,6 +1186,22 @@ async function renderDashboard() {
         </button>`).join('')}
     </div>
 
+    <!-- Atalho sugestões (só superadmin) -->
+    ${(state.profile?.perfil === 'superadmin' || state.user?.email === brandConfig.superadminEmail) ? `
+    <a href="admin-planos.html" style="text-decoration:none;display:flex;align-items:center;gap:14px;background:#fff;border-radius:18px;padding:14px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.07)">
+        <div style="position:relative;flex-shrink:0">
+            <div style="width:46px;height:46px;border-radius:14px;background:#fef9c3;display:flex;align-items:center;justify-content:center;font-size:20px;color:#ca8a04">
+                <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <span id="badgeSugestoesDash" style="display:none;position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;line-height:1.4"></span>
+        </div>
+        <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text,#1e293b)">Sugestões dos usuários</div>
+            <div style="font-size:11px;color:var(--muted,#94a3b8)">Ver mensagens no painel admin</div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted,#94a3b8);font-size:12px"></i>
+    </a>` : ''}
+
     <!-- Rodízio hoje -->
     ${restrictedVehicles.length ? (() => {
         const cityModel = CITY_MODELS[getRodizioCity()] || CITY_MODELS.sp;
@@ -6827,7 +6843,7 @@ function iniciarBadgeSugestoes() {
     const q = query(collection(db, 'sugestoes'), where('lida', '==', false));
     _badgeUnsubSugestoes = onSnapshot(q, snap => {
         const count = snap.size;
-        ['badgeSugestoes', 'badgeSugestoesMobile', 'badgeSugestoesHeader'].forEach(id => {
+        ['badgeSugestoes', 'badgeSugestoesMobile', 'badgeSugestoesHeader', 'badgeSugestoesDash'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = ''; }
