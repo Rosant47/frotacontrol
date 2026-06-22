@@ -6827,7 +6827,7 @@ function iniciarBadgeSugestoes() {
     const q = query(collection(db, 'sugestoes'), where('lida', '==', false));
     _badgeUnsubSugestoes = onSnapshot(q, snap => {
         const count = snap.size;
-        ['badgeSugestoes', 'badgeSugestoesMobile'].forEach(id => {
+        ['badgeSugestoes', 'badgeSugestoesMobile', 'badgeSugestoesHeader'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = ''; }
