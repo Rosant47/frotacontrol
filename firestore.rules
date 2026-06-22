@@ -152,6 +152,16 @@ service cloud.firestore {
           || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
     }
 
+    // Sugestões — qualquer autenticado envia; só superadmin lê e atualiza
+    match /sugestoes/{id} {
+      allow create: if isAuthenticated();
+      allow read:   if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+      allow update: if isSuperAdmin()
+          || (isAuthenticated() && request.auth.token.email == 'rbeto45@gmail.com');
+      allow delete: if false;
+    }
+
     // Logs de atividade — qualquer autenticado grava; só superadmin lê
     match /logs/{id} {
       allow create: if isAuthenticated();

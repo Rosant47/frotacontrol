@@ -6851,6 +6851,16 @@ function showSugestaoModal() {
         const userName  = document.getElementById('headerUserName')?.textContent || '';
         const mensagem  = `💡 *${brandConfig.name} — Nova sugestão!*\n\nEmpresa: *${empresa}*\nUsuário: ${userName}\nEmail: ${userEmail}\n\n${txt}`;
 
+        addDoc(collection(db, 'sugestoes'), {
+            texto:      txt,
+            empresa:    empresa,
+            empresaId:  state.empresa?.id || '',
+            usuario:    userName,
+            email:      userEmail,
+            lida:       false,
+            criadoEm:   serverTimestamp(),
+        }).catch(() => {});
+
         if (brandConfig.ntfyTopic) {
             fetch(`https://ntfy.sh/${brandConfig.ntfyTopic}`, {
                 method: 'POST',

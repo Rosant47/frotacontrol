@@ -174,6 +174,17 @@
             <div class="stat stat-mrr"><div class="stat-val" id="statMRR">—</div><div class="stat-lbl">Receita est. /mês</div></div>
         </div>
 
+        <!-- Sugestões dos usuários -->
+        <div class="card" id="sugestoesCard">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-lightbulb" style="color:#ca8a04"></i> Sugestões dos usuários <span id="sugestoesBadge" style="display:none;background:#ca8a04;color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;vertical-align:middle"></span></h2>
+                <button id="btnMarcarTodasLidas" class="btn-sm" style="background:#fef9c3;color:#854d0e;border:1.5px solid #fde047;display:none">
+                    <i class="fa-solid fa-check-double"></i> Marcar todas como lidas
+                </button>
+            </div>
+            <div id="sugestoesList"><div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px"><i class="fa-solid fa-spinner fa-spin"></i> Carregando...</div></div>
+        </div>
+
         <!-- Tabela de empresas -->
         <div class="card">
             <div class="card-header">
@@ -249,7 +260,7 @@
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, where, serverTimestamp, Timestamp }
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig, brandConfig } from './assets/js/config.js';
 
@@ -286,7 +297,7 @@ onAuthStateChanged(auth, async user => {
     }
 
     document.getElementById('mainContent').style.display = 'block';
-    await Promise.all([loadEmpresas(), loadPrecos()]);
+    await Promise.all([loadEmpresas(), loadPrecos(), loadSugestoes()]);
     document.getElementById('btnSalvarPrecos').addEventListener('click', savePrecos);
     document.getElementById('btnCsv').addEventListener('click', exportCsv);
 });
@@ -741,6 +752,77 @@ async function extendTrial(days) {
 
 document.getElementById('btn7d').addEventListener('click',  () => extendTrial(7));
 document.getElementById('btn30d').addEventListener('click', () => extendTrial(30));
+
+// ─── Sugestões ────────────────────────────────────────────────────────────────
+
+let allSugestoes = [];
+
+async function loadSugestoes() {
+    try {
+        const snap = await getDocs(query(collection(db, 'sugestoes'), orderBy('criadoEm', 'desc')));
+        allSugestoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderSugestoes();
+    } catch(_) {
+        document.getElementById('sugestoesList').innerHTML = '<div style="padding:16px;font-size:13px;color:#94a3b8">Não foi possível carregar as sugestões.</div>';
+    }
+}
+
+function renderSugestoes() {
+    const list  = document.getElementById('sugestoesList');
+    const badge = document.getElementById('sugestoesBadge');
+    const btnMarcar = document.getElementById('btnMarcarTodasLidas');
+    const naoLidas  = allSugestoes.filter(s => !s.lida).length;
+
+    if (naoLidas > 0) {
+        badge.textContent = naoLidas + ' nova' + (naoLidas > 1 ? 's' : '');
+        badge.style.display = '';
+        btnMarcar.style.display = '';
+    } else {
+        badge.style.display = 'none';
+        btnMarcar.style.display = 'none';
+    }
+
+    if (!allSugestoes.length) {
+        list.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:13px"><i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>Nenhuma sugestão recebida ainda.</div>';
+        return;
+    }
+
+    list.innerHTML = allSugestoes.map(s => {
+        const data = s.criadoEm?.toDate ? s.criadoEm.toDate().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+        return `
+        <div style="border:1.5px solid ${s.lida ? '#f1f5f9' : '#fde047'};border-radius:12px;padding:14px 16px;margin-bottom:10px;background:${s.lida ? '#fafafa' : '#fefce8'}">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;color:#1e293b;line-height:1.6;white-space:pre-wrap">${s.texto.replace(/</g,'&lt;')}</div>
+                    <div style="margin-top:8px;font-size:11px;color:#94a3b8;display:flex;gap:12px;flex-wrap:wrap">
+                        <span><i class="fa-solid fa-building"></i> ${s.empresa || '—'}</span>
+                        <span><i class="fa-solid fa-user"></i> ${s.usuario || s.email || '—'}</span>
+                        <span><i class="fa-solid fa-clock"></i> ${data}</span>
+                    </div>
+                </div>
+                ${!s.lida ? `<button class="btn-sm" style="background:#fff;color:#854d0e;border:1.5px solid #fde047;white-space:nowrap;flex-shrink:0" onclick="marcarLida('${s.id}')">
+                    <i class="fa-solid fa-check"></i> Marcar lida
+                </button>` : '<span style="font-size:11px;color:#94a3b8;flex-shrink:0;padding-top:2px"><i class="fa-solid fa-circle-check"></i> Lida</span>'}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+window.marcarLida = async (id) => {
+    try {
+        await updateDoc(doc(db, 'sugestoes', id), { lida: true });
+        const s = allSugestoes.find(s => s.id === id);
+        if (s) s.lida = true;
+        renderSugestoes();
+    } catch(e) { alert('Erro: ' + e.message); }
+};
+
+document.getElementById('btnMarcarTodasLidas').addEventListener('click', async () => {
+    const naoLidas = allSugestoes.filter(s => !s.lida);
+    await Promise.all(naoLidas.map(s => updateDoc(doc(db, 'sugestoes', s.id), { lida: true }).catch(() => {})));
+    naoLidas.forEach(s => { s.lida = true; });
+    renderSugestoes();
+});
 
 window.contactAdmin = (tel, email, empNome) => {
     const num = tel.replace(/\D/g,'');
