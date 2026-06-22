@@ -6842,24 +6842,35 @@ function showSugestaoModal() {
 
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     document.getElementById('sugestaoCancel').addEventListener('click', () => overlay.remove());
-    document.getElementById('sugestaoSend').addEventListener('click', () => {
+    document.getElementById('sugestaoSend').addEventListener('click', async () => {
         const txt = document.getElementById('sugestaoTxt').value.trim();
         if (!txt) { showToast('Escreva sua sugestão antes de enviar.', 'warning'); return; }
 
-        const empresa  = state.empresa?.nome  || 'desconhecida';
+        const sendBtn = document.getElementById('sugestaoSend');
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+        const empresa   = state.empresa?.nome  || 'desconhecida';
         const userEmail = state.user?.email    || '';
         const userName  = document.getElementById('headerUserName')?.textContent || '';
         const mensagem  = `💡 *${brandConfig.name} — Nova sugestão!*\n\nEmpresa: *${empresa}*\nUsuário: ${userName}\nEmail: ${userEmail}\n\n${txt}`;
 
-        addDoc(collection(db, 'sugestoes'), {
-            texto:      txt,
-            empresa:    empresa,
-            empresaId:  state.empresa?.id || '',
-            usuario:    userName,
-            email:      userEmail,
-            lida:       false,
-            criadoEm:   serverTimestamp(),
-        }).catch(() => {});
+        try {
+            await addDoc(collection(db, 'sugestoes'), {
+                texto:     txt,
+                empresa:   empresa,
+                empresaId: state.empresa?.id || state.profile?.empresaId || '',
+                usuario:   userName,
+                email:     userEmail,
+                lida:      false,
+                criadoEm:  serverTimestamp(),
+            });
+        } catch(err) {
+            showToast('Erro ao enviar sugestão: ' + err.message, 'error');
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar';
+            return;
+        }
 
         if (brandConfig.ntfyTopic) {
             fetch(`https://ntfy.sh/${brandConfig.ntfyTopic}`, {
