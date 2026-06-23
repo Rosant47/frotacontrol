@@ -1134,6 +1134,7 @@ async function renderDashboard() {
         <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,.07);border-radius:50%"></div>
         <div style="position:absolute;bottom:-30px;right:40px;width:80px;height:80px;background:rgba(255,255,255,.05);border-radius:50%"></div>
         <p style="font-size:13px;opacity:.75;margin-bottom:4px">${saudacao}, ${esc(userName)} 👋</p>
+        <p style="font-size:12px;opacity:.6;margin-bottom:10px;text-transform:capitalize">${nowDate.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
             <span id="heroCount" style="font-size:36px;font-weight:800;line-height:1">0</span>
             <span style="font-size:14px;opacity:.8">veículos na frota</span>
