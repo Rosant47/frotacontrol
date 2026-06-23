@@ -105,7 +105,7 @@ else {
         <input id="kmInput" class="km-input" type="number" inputmode="numeric"
                min="${kmIni}" placeholder="${kmCur}" value="${kmCur}">
         <p class="km-hint">KM mínimo: ${fmtKm(kmIni)}</p>
-        <button id="btnEnviar" class="btn btn-primary">Enviar KM</button>
+        <button id="btnEnviar" class="btn btn-primary">Enviar KM para autorização</button>
         <p id="errMsg" class="err-msg"></p>
     `;
 
@@ -126,34 +126,23 @@ else {
 
         try {
             const url = `${BASE}/utilizacoes/${uId}`
-                + `?updateMask.fieldPaths=kmFinal&updateMask.fieldPaths=kmReportadoEm&key=${API_KEY}`;
+                + `?updateMask.fieldPaths=kmPendente&updateMask.fieldPaths=kmPendenteEm&key=${API_KEY}`;
             const r = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fields: {
-                    kmFinal:       { integerValue: String(km) },
-                    kmReportadoEm: { stringValue:  new Date().toISOString() }
+                    kmPendente:   { integerValue: String(km) },
+                    kmPendenteEm: { stringValue:  new Date().toISOString() }
                 }})
             });
             const json = await r.json();
             if (!r.ok) throw new Error(json?.error?.message || 'Erro ' + r.status);
 
-            // Atualiza KM do veículo se ID disponível
-            if (vId) {
-                const urlV = `${BASE}/veiculos/${vId}`
-                    + `?updateMask.fieldPaths=quilometragem&key=${API_KEY}`;
-                await fetch(urlV, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fields: { quilometragem: { integerValue: String(km) } }})
-                }).catch(() => {});
-            }
-
             el.innerHTML = `<div class="center">
-                <div class="icon-big">✅</div>
+                <div class="icon-big">⏳</div>
                 <strong style="color:#1e293b;font-size:20px;display:block;margin-bottom:8px">KM enviado!</strong>
                 <p style="font-size:14px;color:#64748b;margin-bottom:20px">
-                    O KM <strong>${fmtKm(km)}</strong> foi registrado com sucesso.
+                    O KM <strong>${fmtKm(km)}</strong> foi enviado e aguarda autorização do gestor.
                 </p>
                 <button class="btn btn-ghost" onclick="window.close()">Fechar esta aba</button>
             </div>`;
