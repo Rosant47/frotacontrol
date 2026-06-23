@@ -49,10 +49,11 @@ const PROJECT = 'frota-empresa-a8202';
 const API_KEY = 'AIzaSyChncsYZ1jNTfhtDzLWdYAJJdGyxnUc8vg';
 const BASE    = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 
-const p   = new URLSearchParams(location.search);
-const uId = p.get('u');
-const tok = p.get('t');
-const vId = p.get('vid') || '';
+const p      = new URLSearchParams(location.search);
+const uId    = p.get('u');
+const tok    = p.get('t');
+const vId    = p.get('vid') || '';
+const ntfyTopic = p.get('nt') || '';
 const el  = document.getElementById('content');
 
 function fmtKm(v) { return Number(v||0).toLocaleString('pt-BR') + ' km'; }
@@ -137,6 +138,21 @@ else {
             });
             const json = await r.json();
             if (!r.ok) throw new Error(json?.error?.message || 'Erro ' + r.status);
+
+            // Notifica o gestor via ntfy.sh
+            if (ntfyTopic) {
+                const nome  = p.get('n')  || 'Motorista';
+                const placa = p.get('p')  || '—';
+                fetch(`https://ntfy.sh/${ntfyTopic}`, {
+                    method: 'POST',
+                    headers: {
+                        'Title':    `🚗 KM reportado — ${placa}`,
+                        'Priority': 'default',
+                        'Tags':     'car,checkered_flag',
+                    },
+                    body: `${nome} reportou o KM ${fmtKm(km)} para o veículo ${placa}.`,
+                }).catch(() => {});
+            }
 
             // Atualiza KM do veículo automaticamente
             if (vId) {

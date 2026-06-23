@@ -790,6 +790,7 @@ function motoristUrl(u, v, m) {
         ki:  String(u.kmInicial || 0),
         kf:  String(u.kmFinal   || u.kmInicial || 0),
         vid: u.veiculoId || '',
+        nt:  brandConfig.ntfyTopic || '',
     });
     return `https://frotacontrol.api.br/motorista.html?${p.toString()}`;
 }
