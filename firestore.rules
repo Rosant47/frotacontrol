@@ -100,7 +100,7 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['localizacao', 'trilha']))
         || (resource.data.linkToken != null
             && resource.data.linkToken == request.resource.data.linkToken
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kmPendente', 'kmPendenteEm']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kmFinal', 'kmReportadoEm']));
       allow delete: if isAdmin() && sameCompany();
     }
 

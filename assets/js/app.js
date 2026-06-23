@@ -6,7 +6,7 @@ import { getAuth, signOut, onAuthStateChanged, sendEmailVerification, updatePass
 import {
     initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager,
     collection, doc,
-    getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, deleteField,
+    getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
     query, where, orderBy, serverTimestamp, Timestamp, onSnapshot, increment
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
@@ -3054,14 +3054,12 @@ async function renderUsage(sub) {
           <span style="font-size:12px;color:var(--muted)">Saiu ${u.horaSaida?.substring(0,5)||'—'}</span>
         </div>
         <div style="font-size:12px;color:var(--muted)">KM: <span style="font-weight:600;color:var(--text)">${fmtKm(u.kmInicial)}</span></div>
-        ${u.kmPendente ? `<span style="font-size:11px;font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:2px 8px;border-radius:10px;white-space:nowrap"><i class="fa-solid fa-circle-exclamation"></i> KM pendente: ${fmtKm(u.kmPendente)}</span>` : ''}
       </div>
       ${canEdit() ? `<div class="card-list-actions">
         <button class="btn btn-primary btn-sm" data-gps="${u.id}" title="Abrir mapa ao vivo"><i class="fa-solid fa-map-location-dot"></i></button>
         ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar rastreio para ${esc(m?.nome||'')}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:9px;margin-left:1px"></i></a>` : ''}
         <button class="btn btn-warning btn-sm" data-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" title="Atualizar KM"><i class="fa-solid fa-gauge-high"></i></button>
         ${m?.telefone ? `<button data-wa-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" data-wa-url="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(`Olá ${m?.nome||''}! Pode nos informar o KM atual do veículo ${v?.placa||''}?\n👉 ${motoristUrl(u,v,m)}`)}" class="btn btn-whatsapp btn-sm" title="Solicitar KM via WhatsApp"><i class="fa-solid fa-gauge-high"></i><i class="fa-brands fa-whatsapp" style="font-size:9px;margin-left:1px"></i></button>` : ''}
-        ${u.kmPendente ? `<button data-km-auth="${u.id}" data-km-pend="${u.kmPendente}" data-km-ini="${u.kmInicial}" data-vid="${u.veiculoId}" class="btn btn-sm" style="background:#d97706;color:#fff;border:none" title="Autorizar KM: ${fmtKm(u.kmPendente)}"><i class="fa-solid fa-circle-check"></i></button>` : ''}
         <button class="btn btn-secondary btn-sm" data-swap="${u.id}" title="Trocar motorista no turno"><i class="fa-solid fa-arrows-rotate"></i></button>
         <button class="btn btn-primary btn-sm" data-edit="${u.id}"><i class="fa-solid fa-flag-checkered"></i> Finalizar</button>
         ${isAdmin()?`<button class="btn btn-danger btn-sm" data-delete="${u.id}" data-vid="${u.veiculoId}" data-status="${u.status}" title="Cancelar"><i class="fa-solid fa-ban"></i></button>`:''}
@@ -3094,7 +3092,6 @@ async function renderUsage(sub) {
         <div style="display:flex;gap:16px">
           <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">KM Saída</div><div style="font-weight:600;font-size:13px">${fmtKm(u.kmInicial)}</div></div>
         </div>
-        ${u.kmPendente ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px"><i class="fa-solid fa-circle-exclamation" style="color:#d97706;flex-shrink:0"></i><span>KM reportado pelo motorista: <strong>${fmtKm(u.kmPendente)}</strong> — aguardando sua autorização</span></div>` : ''}
         ${u.observacoes?`<div style="font-size:11px;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:8px;margin-top:2px">${esc(u.observacoes)}</div>`:''}
         ${trocasTimeline(u, driverMap)}
       </div>
@@ -3103,7 +3100,6 @@ async function renderUsage(sub) {
         ${m?.telefone ? `<a href="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(waMsgTracker(u,v,m))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Enviar link de rastreio para ${esc(m?.nome||'')}"><i class="fa-solid fa-satellite-dish"></i><i class="fa-brands fa-whatsapp" style="font-size:10px;margin-left:2px"></i> Enviar Rastreio</a>` : ''}
         <button class="btn btn-warning btn-sm" data-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" title="Atualizar KM"><i class="fa-solid fa-gauge-high"></i> KM</button>
         ${m?.telefone ? `<button data-wa-km="${u.id}" data-km-ini="${u.kmInicial}" data-km-cur="${u.kmFinal||u.kmInicial}" data-vid="${u.veiculoId}" data-wa-url="https://wa.me/${waLink(m.telefone)}?text=${encodeURIComponent(`Olá ${m?.nome||''}! Pode nos informar o KM atual do veículo ${v?.placa||''}?\n👉 ${motoristUrl(u,v,m)}`)}" class="btn btn-whatsapp btn-sm" title="Solicitar KM via WhatsApp"><i class="fa-solid fa-gauge-high"></i><i class="fa-brands fa-whatsapp" style="font-size:10px;margin-left:2px"></i> Solicitar KM</button>` : ''}
-        ${u.kmPendente ? `<button data-km-auth="${u.id}" data-km-pend="${u.kmPendente}" data-km-ini="${u.kmInicial}" data-vid="${u.veiculoId}" class="btn btn-sm" style="background:#d97706;color:#fff;border:none"><i class="fa-solid fa-circle-check"></i> Autorizar KM</button>` : ''}
         <button class="btn btn-secondary btn-sm" data-swap="${u.id}" title="Trocar motorista no turno"><i class="fa-solid fa-arrows-rotate"></i> Trocar Motorista</button>
         <button class="btn btn-primary btn-sm" data-edit="${u.id}">
           <i class="fa-solid fa-flag-checkered"></i> Finalizar
@@ -3261,66 +3257,6 @@ async function renderUsage(sub) {
             showFlash(`KM atualizado para ${fmtKm(km)}.`);
             renderUsage();
         } catch(e) { showFlash('Erro: '+e.message,'danger'); b.disabled = false; b.innerHTML = orig; }
-    }));
-    document.querySelectorAll('[data-km-auth]').forEach(b => b.addEventListener('click', () => {
-        const kmPend = parseInt(b.dataset.kmPend) || 0;
-        const kmIni  = parseInt(b.dataset.kmIni)  || 0;
-        const uId    = b.dataset.kmAuth;
-        const vId    = b.dataset.vid;
-
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-        overlay.innerHTML = `
-            <div style="background:var(--card,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.3)">
-                <h2 style="font-size:17px;font-weight:700;color:var(--text,#1e293b);margin:0 0 6px">
-                    <i class="fa-solid fa-circle-check" style="color:#d97706"></i> Autorizar KM
-                </h2>
-                <p style="font-size:13px;color:var(--muted,#64748b);margin:0 0 18px">O motorista reportou o KM abaixo. Confira e autorize ou corrija o valor.</p>
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted,#64748b);display:block;margin-bottom:5px">KM reportado pelo motorista</label>
-                <input id="authKmInput" type="number" min="${kmIni}" value="${kmPend}"
-                    style="width:100%;padding:12px;font-size:22px;font-weight:700;text-align:center;border:2px solid #fde68a;border-radius:10px;box-sizing:border-box;color:var(--text,#1e293b);background:var(--bg,#fffbeb);font-family:inherit">
-                <p style="font-size:12px;color:var(--muted,#94a3b8);text-align:center;margin:6px 0 20px">KM mínimo: ${fmtKm(kmIni)}</p>
-                <div id="authKmErr" style="display:none;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px"></div>
-                <div style="display:flex;gap:10px;justify-content:flex-end">
-                    <button id="authKmCancel" style="padding:10px 18px;border:1.5px solid var(--border,#e2e8f0);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text,#1e293b)">Cancelar</button>
-                    <button id="authKmOk" style="padding:10px 22px;background:#d97706;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">
-                        <i class="fa-solid fa-circle-check"></i> Autorizar
-                    </button>
-                </div>
-            </div>`;
-        document.body.appendChild(overlay);
-        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-        document.getElementById('authKmCancel').addEventListener('click', () => overlay.remove());
-        document.getElementById('authKmOk').addEventListener('click', async () => {
-            const km  = parseInt(document.getElementById('authKmInput').value);
-            const err = document.getElementById('authKmErr');
-            err.style.display = 'none';
-            if (isNaN(km) || km < kmIni) {
-                err.textContent = `KM inválido — mínimo ${fmtKm(kmIni)}.`;
-                err.style.display = 'block';
-                return;
-            }
-            const btn = document.getElementById('authKmOk');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autorizando...';
-            try {
-                await updateDoc(doc(db, 'utilizacoes', uId), {
-                    kmFinal:      km,
-                    kmPendente:   deleteField(),
-                    kmPendenteEm: deleteField(),
-                });
-                const veh = await getOne('veiculos', vId);
-                if (!veh || km > (veh.quilometragem || 0)) await saveDoc('veiculos', { quilometragem: km }, vId);
-                state.cache.vehicles = null;
-                overlay.remove();
-                showFlash(`KM ${fmtKm(km)} autorizado com sucesso!`);
-                renderUsage();
-            } catch(e) {
-                err.textContent = 'Erro: ' + e.message;
-                err.style.display = 'block';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Autorizar';
-            }
-        });
     }));
     attachPagination(p => { usagePage=p; renderUsage(); });
     document.getElementById('uToggleHidden')?.addEventListener('click', () => { usageShowHidden = !usageShowHidden; renderUsage(); });
