@@ -3493,11 +3493,18 @@ async function renderUsageForm() {
             await saveDoc('veiculos', { status: 'em_uso' }, vid);
             state.cache.vehicles = null;
             showFlash('Utilização iniciada com sucesso.');
-            // Auto-open WhatsApp
-            const tel = waLink(m?.telefone);
+            const tel  = waLink(m?.telefone);
+            const uObj = { ...data, id: docId };
             if (tel) {
-                const uObj = { ...data, id: docId };
-                window.open(`https://wa.me/${tel}?text=${encodeURIComponent(waMsg(uObj,v,m))}`, '_blank');
+                const msg = waMsg(uObj, v, m);
+                if (brandConfig.callmebotApiKey) {
+                    // Envia automaticamente via CallMeBot sem abrir nova aba
+                    fetch(`https://api.callmebot.com/whatsapp.php?phone=${tel}&text=${encodeURIComponent(msg)}&apikey=${brandConfig.callmebotApiKey}`, { mode: 'no-cors' }).catch(() => {});
+                    showFlash('Utilização iniciada. Mensagem enviada ao motorista via WhatsApp.');
+                } else {
+                    // Fallback: abre WhatsApp para o gestor enviar manualmente
+                    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank');
+                }
             }
             navigate('usage');
         } catch(err) { showFlash('Erro: '+err.message,'danger'); }
